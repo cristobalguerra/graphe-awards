@@ -1,26 +1,51 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-alabaster: #F1F1E9;
+  --color-pink: #FFB3AB;
+  --color-green-brand: #008755;
+  --color-navy: #305379;
+  --color-orange-brand: #DB6B30;
+  --color-dark: #101820;
+  --color-purple: #7C6992;
+  --color-red-brand: #C63527;
+  --color-yellow-brand: #FFA400;
+  --color-teal: #00594F;
+  --color-surface: #111110;
+  --color-surface-2: #1a1a18;
   --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: #0a0a09;
+  color: #F1F1E9;
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* GSAP reveal animations */
+.reveal-up {
+  opacity: 0;
+  transform: translateY(60px);
+}
+
+.reveal-scale {
+  opacity: 0;
+  transform: scale(0.92);
+}
+
+.line-reveal {
+  transform: scaleX(0);
+  transform-origin: left;
 }

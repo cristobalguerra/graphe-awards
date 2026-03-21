@@ -39,3 +39,12 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# macOS
+._*
+.DS_Store
+
+# Source files not needed in repo
+public/graphe.psd
+public/trophy.stl
+
