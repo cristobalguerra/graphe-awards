@@ -4,6 +4,8 @@ import { useRef, useState } from "react";
 import { CATEGORIES, NOMINEES } from "@/lib/data";
 import CategoryIcon from "./CategoryIcon";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import TextReveal from "./TextReveal";
+import FlipCard from "./FlipCard";
 
 export default function Nominees() {
   const [activeCategory, setActiveCategory] = useState<string>(CATEGORIES[0].id);
@@ -21,14 +23,18 @@ export default function Nominees() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20">
-        <div className="mb-16 reveal-up">
-          <p className="text-[10px] font-medium tracking-[0.3em] uppercase mb-4" style={{ color: "#FFB3AB" }}>
+        <div className="mb-16">
+          <p className="text-[10px] font-medium tracking-[0.3em] uppercase mb-4 reveal-up" style={{ color: "#FFB3AB" }}>
             02 / Shortlist
           </p>
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-[-0.03em] text-white leading-[0.9]">
+          <TextReveal
+            as="h2"
+            variant="words"
+            className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-[-0.03em] text-white leading-[0.9]"
+          >
             Nominados
-          </h2>
-          <p className="mt-6 text-base text-white/30 max-w-lg leading-relaxed">
+          </TextReveal>
+          <p className="mt-6 text-base text-white/30 max-w-lg leading-relaxed reveal-up">
             Los proyectos seleccionados para competir en cada categoría.
           </p>
         </div>
@@ -53,13 +59,13 @@ export default function Nominees() {
           ))}
         </div>
 
-        <Carousel nominees={nominees} color={activeData.color} />
+        <Carousel nominees={nominees} color={activeData.color} categoryName={activeData.name} />
       </div>
     </section>
   );
 }
 
-function Carousel({ nominees, color }: { nominees: typeof NOMINEES; color: string }) {
+function Carousel({ nominees, color, categoryName }: { nominees: typeof NOMINEES; color: string; categoryName: string }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const scroll = (dir: "left" | "right") => {
     scrollRef.current?.scrollBy({ left: dir === "left" ? -340 : 340, behavior: "smooth" });
@@ -76,18 +82,37 @@ function Carousel({ nominees, color }: { nominees: typeof NOMINEES; color: strin
 
       <div ref={scrollRef} className="flex gap-5 overflow-x-auto hide-scrollbar py-2">
         {nominees.map((nom) => (
-          <div key={nom.id} className="flex-shrink-0 w-[300px] rounded-2xl overflow-hidden group/card border border-white/[0.06] hover:border-white/[0.12] transition-all duration-500" style={{ backgroundColor: "#111110" }}>
-            <div className="h-52 flex items-center justify-center" style={{ backgroundColor: `${color}08` }}>
-              <span className="text-7xl font-black opacity-[0.06]" style={{ color }}>{nom.project.charAt(0)}</span>
-            </div>
-            <div className="p-6">
-              <h3 className="font-bold text-lg text-white mb-1 tracking-tight">{nom.project}</h3>
-              <p className="text-sm text-white/30">{nom.name}</p>
-              <div className="mt-4">
-                <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold tracking-wide" style={{ backgroundColor: `${color}15`, color }}>{nom.semester}</span>
+          <FlipCard
+            key={nom.id}
+            className="flex-shrink-0 w-[300px] h-[340px]"
+            front={
+              <div className="w-full h-full rounded-2xl overflow-hidden border border-white/[0.06] hover:border-white/[0.12] transition-all duration-500" style={{ backgroundColor: "#111110" }}>
+                <div className="h-52 flex items-center justify-center" style={{ backgroundColor: `${color}08` }}>
+                  <span className="text-7xl font-black opacity-[0.06]" style={{ color }}>{nom.project.charAt(0)}</span>
+                </div>
+                <div className="p-6">
+                  <h3 className="font-bold text-lg text-white mb-1 tracking-tight">{nom.project}</h3>
+                  <p className="text-sm text-white/30">{nom.name}</p>
+                  <div className="mt-4">
+                    <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold tracking-wide" style={{ backgroundColor: `${color}15`, color }}>{nom.semester}</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            }
+            back={
+              <div className="w-full h-full rounded-2xl overflow-hidden border border-white/[0.12] flex flex-col items-center justify-center p-8 text-center" style={{ backgroundColor: "#111110" }}>
+                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: `${color}20` }}>
+                  <span className="text-xl font-black" style={{ color }}>{nom.project.charAt(0)}</span>
+                </div>
+                <h3 className="font-bold text-lg text-white mb-2">{nom.project}</h3>
+                <p className="text-sm text-white/40 mb-1">{nom.name}</p>
+                <p className="text-xs text-white/20 mb-4">{categoryName} · {nom.semester}</p>
+                <div className="mt-2 px-5 py-2 rounded-full text-xs font-semibold border transition-colors" style={{ borderColor: color, color }}>
+                  Ver Proyecto
+                </div>
+              </div>
+            }
+          />
         ))}
       </div>
     </div>

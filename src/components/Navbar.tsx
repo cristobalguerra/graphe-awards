@@ -6,6 +6,7 @@ import { basePath } from "@/lib/basePath";
 const links = [
   { href: "#categorias", label: "Categorías" },
   { href: "#nominados", label: "Nominados" },
+  { href: "#jurado", label: "Jurado" },
   { href: "#criterios", label: "Criterios" },
   { href: "#ganadores", label: "Ganadores" },
 ];

@@ -16,14 +16,30 @@
   --font-sans: var(--font-geist-sans);
 }
 
-html {
-  scroll-behavior: smooth;
+/* Lenis smooth scroll */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+
+html.lenis.lenis-smooth {
+  scroll-behavior: auto;
 }
 
 body {
   background: #0a0a09;
   color: #F1F1E9;
   font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+}
+
+/* Custom cursor — hide default on desktop */
+@media (pointer: fine) {
+  body {
+    cursor: none;
+  }
+  a, button, [data-cursor="pointer"] {
+    cursor: none;
+  }
 }
 
 .hide-scrollbar::-webkit-scrollbar {

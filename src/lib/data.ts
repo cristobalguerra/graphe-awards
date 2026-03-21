@@ -4,48 +4,81 @@ export const CATEGORIES = [
     name: "Fotografía",
     color: "#FFB3AB",
     icon: "circle",
+    // Reemplaza estas URLs con las fotos reales de los nominados
+    images: [
+      "https://images.unsplash.com/photo-1554080353-a576cf803bda?w=200&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=200&auto=format&fit=crop&q=60",
+    ],
   },
   {
     id: "ilustracion",
     name: "Ilustración",
     color: "#008755",
     icon: "shield",
+    images: [
+      "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=200&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1579762715118-a6f1d4b934f1?w=200&auto=format&fit=crop&q=60",
+    ],
   },
   {
     id: "logotipo",
     name: "Logotipo",
     color: "#305379",
     icon: "logo",
+    images: [
+      "https://images.unsplash.com/photo-1626785774573-4b799315345d?w=200&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1561070791-2526d30994b5?w=200&auto=format&fit=crop&q=60",
+    ],
   },
   {
     id: "producto",
     name: "Producto",
     color: "#DB6B30",
     icon: "square",
+    images: [
+      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=200&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=200&auto=format&fit=crop&q=60",
+    ],
   },
   {
     id: "empaque",
     name: "Empaque",
     color: "#7C6992",
     icon: "arch",
+    images: [
+      "https://images.unsplash.com/photo-1607082349566-187342175e2f?w=200&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1605000797499-95a51c5269ae?w=200&auto=format&fit=crop&q=60",
+    ],
   },
   {
     id: "editorial",
     name: "Editorial",
     color: "#00594F",
     icon: "pentagon",
+    images: [
+      "https://images.unsplash.com/photo-1524578271613-d550eacf6090?w=200&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1456513080510-7bf3a84b82f8?w=200&auto=format&fit=crop&q=60",
+    ],
   },
   {
     id: "digital",
     name: "Digital",
     color: "#C63527",
     icon: "dots",
+    images: [
+      "https://images.unsplash.com/photo-1551650975-87deedd944c3?w=200&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1547658719-da2b51169166?w=200&auto=format&fit=crop&q=60",
+    ],
   },
   {
     id: "agencia",
     name: "Agencia del Año",
     color: "#FFA400",
     icon: "flower",
+    images: [
+      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&auto=format&fit=crop&q=60",
+      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=60",
+    ],
   },
 ] as const;
 

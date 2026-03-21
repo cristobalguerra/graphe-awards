@@ -4,6 +4,8 @@ import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { EVENT_DATE } from "@/lib/data";
 import { basePath } from "@/lib/basePath";
+import MagneticButton from "./MagneticButton";
+import { Ticket, ArrowRight } from "lucide-react";
 
 const Trophy3D = dynamic(() => import("./Trophy3D"), {
   ssr: false,
@@ -89,6 +91,17 @@ export default function Hero() {
               alt="Graphē Awards"
               className="w-[280px] sm:w-[400px] lg:w-[520px] h-auto"
             />
+            {/* Ticket banner */}
+            <a
+              href="https://forms.gle/PLACEHOLDER"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.1] bg-white/[0.05] backdrop-blur-sm text-white/70 text-xs sm:text-sm font-medium hover:bg-white/[0.1] hover:text-white hover:border-white/[0.2] transition-all duration-300 w-fit group"
+            >
+              <Ticket className="h-3.5 w-3.5 text-[#FFA400]" />
+              <span>Entrada gratuita — Obtén tu boleto</span>
+              <ArrowRight className="h-3 w-3 text-[#FFA400] group-hover:translate-x-0.5 transition-transform" />
+            </a>
           </div>
 
           {/* Bottom — info bar */}
@@ -120,18 +133,22 @@ export default function Hero() {
 
             {/* CTA */}
             <div className="flex gap-3">
-              <a
-                href="#nominados"
-                className="px-7 py-3.5 bg-[#FFA400] text-black text-sm font-semibold rounded-full hover:bg-[#ffb333] transition-colors"
-              >
-                Ver Nominados
-              </a>
-              <a
-                href="#categorias"
-                className="px-7 py-3.5 border border-white/20 text-white text-sm font-semibold rounded-full hover:border-[#FFB3AB] hover:text-[#FFB3AB] transition-colors"
-              >
-                Categorías
-              </a>
+              <MagneticButton>
+                <a
+                  href="#nominados"
+                  className="px-7 py-3.5 bg-[#FFA400] text-black text-sm font-semibold rounded-full hover:bg-[#ffb333] transition-colors inline-block"
+                >
+                  Ver Nominados
+                </a>
+              </MagneticButton>
+              <MagneticButton>
+                <a
+                  href="#categorias"
+                  className="px-7 py-3.5 border border-white/20 text-white text-sm font-semibold rounded-full hover:border-[#FFB3AB] hover:text-[#FFB3AB] transition-colors inline-block"
+                >
+                  Categorías
+                </a>
+              </MagneticButton>
             </div>
           </div>
         </div>

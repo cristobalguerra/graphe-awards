@@ -2,6 +2,10 @@
 
 import { JURY_CRITERIA } from "@/lib/data";
 import { useScrollReveal } from "@/lib/useScrollReveal";
+import TextReveal from "./TextReveal";
+import StaggerGrid from "./StaggerGrid";
+import CountUp from "./CountUp";
+import TiltCard from "./TiltCard";
 
 const COLORS = ["#FFB3AB", "#008755", "#305379", "#DB6B30"];
 
@@ -18,44 +22,49 @@ export default function Jury() {
       </div>
 
       <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20">
-        <div className="mb-12 reveal-up">
-          <p className="text-[10px] font-medium tracking-[0.3em] uppercase mb-4" style={{ color: "#008755" }}>
-            03 / Evaluación
+        <div className="mb-12">
+          <p className="text-[10px] font-medium tracking-[0.3em] uppercase mb-4 reveal-up" style={{ color: "#008755" }}>
+            04 / Evaluación
           </p>
-          <h2 className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-[-0.03em] text-white leading-[0.9]">
+          <TextReveal
+            as="h2"
+            variant="words"
+            className="text-5xl sm:text-6xl lg:text-7xl font-black tracking-[-0.03em] text-white leading-[0.9]"
+          >
             Criterios
-          </h2>
-          <p className="mt-6 text-base text-white/30 max-w-lg leading-relaxed">
+          </TextReveal>
+          <p className="mt-6 text-base text-white/30 max-w-lg leading-relaxed reveal-up">
             Cada proyecto es evaluado bajo cuatro pilares fundamentales.
           </p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StaggerGrid className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4" columns={4}>
           {JURY_CRITERIA.map((c, i) => (
-            <div
-              key={c.title}
-              className="reveal-scale rounded-2xl p-8 sm:p-10 border border-white/[0.06] relative overflow-hidden group hover:border-white/[0.12] transition-all duration-500"
-              style={{ backgroundColor: "#111110" }}
-            >
+            <TiltCard key={c.title} className="relative rounded-2xl">
               <div
-                className="absolute top-0 left-0 w-full h-[2px]"
-                style={{ backgroundColor: COLORS[i] }}
-              />
-              <div
-                className="text-6xl font-black mb-6 opacity-[0.08]"
-                style={{ color: COLORS[i] }}
+                className="rounded-2xl p-8 sm:p-10 border border-white/[0.06] relative overflow-hidden group hover:border-white/[0.12] transition-all duration-500 h-full"
+                style={{ backgroundColor: "#111110" }}
               >
-                {c.weight}
+                <div
+                  className="absolute top-0 left-0 w-full h-[2px]"
+                  style={{ backgroundColor: COLORS[i] }}
+                />
+                <div
+                  className="text-6xl font-black mb-6 opacity-[0.08]"
+                  style={{ color: COLORS[i] }}
+                >
+                  <CountUp target={25} suffix="%" />
+                </div>
+                <h3 className="text-xl font-bold text-white mb-3 tracking-tight">
+                  {c.title}
+                </h3>
+                <p className="text-sm text-white/30 leading-relaxed">
+                  {c.description}
+                </p>
               </div>
-              <h3 className="text-xl font-bold text-white mb-3 tracking-tight">
-                {c.title}
-              </h3>
-              <p className="text-sm text-white/30 leading-relaxed">
-                {c.description}
-              </p>
-            </div>
+            </TiltCard>
           ))}
-        </div>
+        </StaggerGrid>
       </div>
     </section>
   );
