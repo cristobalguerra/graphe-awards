@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { EVENT_DATE } from "@/lib/data";
+import { basePath } from "@/lib/basePath";
 
 const Trophy3D = dynamic(() => import("./Trophy3D"), {
   ssr: false,
@@ -84,7 +85,7 @@ export default function Hero() {
               Universidad de Monterrey — LDGD
             </p>
             <img
-              src="/logo-white.png"
+              src={`${basePath}/logo-white.png`}
               alt="Graphē Awards"
               className="w-[280px] sm:w-[400px] lg:w-[520px] h-auto"
             />

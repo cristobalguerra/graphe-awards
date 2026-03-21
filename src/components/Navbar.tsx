@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { basePath } from "@/lib/basePath";
 
 const links = [
   { href: "#categorias", label: "Categorías" },
@@ -31,7 +32,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           <a href="#" className="h-5 w-28 block">
             <img
-              src="/logo-white.png"
+              src={`${basePath}/logo-white.png`}
               alt="Graphē Awards"
               className="h-full w-auto object-contain"
             />

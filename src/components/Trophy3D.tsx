@@ -5,6 +5,7 @@ import { Canvas, useFrame, useLoader, useThree } from "@react-three/fiber";
 import { Environment, Float } from "@react-three/drei";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import * as THREE from "three";
+import { basePath } from "@/lib/basePath";
 
 function createGrainTexture(size = 1024): THREE.CanvasTexture {
   const canvas = document.createElement("canvas");
@@ -104,7 +105,7 @@ function createBumpTexture(size = 512): THREE.CanvasTexture {
 
 function TrophyModel({ scrollProgress }: { scrollProgress: number }) {
   const groupRef = useRef<THREE.Group>(null);
-  const gltf = useLoader(GLTFLoader, "/trophy.glb");
+  const gltf = useLoader(GLTFLoader, `${basePath}/trophy.glb`);
 
   const stoneMaterial = useMemo(() => {
     const colorMap = createGrainTexture(1024);
