@@ -10,16 +10,18 @@ import Jury from "@/components/Jury";
 import Winners from "@/components/Winners";
 import Footer from "@/components/Footer";
 import LoadingScreen from "@/components/LoadingScreen";
+import RegistrationModal from "@/components/RegistrationModal";
 
 export default function Home() {
   const [loaded, setLoaded] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
 
   return (
     <>
       {!loaded && <LoadingScreen onComplete={() => setLoaded(true)} />}
       <Navbar />
       <main>
-        <Hero />
+        <Hero onGetTicket={() => setModalOpen(true)} />
         <Categories />
         <Nominees />
         <JuryPanel />
@@ -27,6 +29,7 @@ export default function Home() {
         <Winners />
       </main>
       <Footer />
+      <RegistrationModal open={modalOpen} onClose={() => setModalOpen(false)} />
     </>
   );
 }

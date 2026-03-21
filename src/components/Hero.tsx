@@ -36,7 +36,7 @@ function useCountdown(target: Date) {
   return time;
 }
 
-export default function Hero() {
+export default function Hero({ onGetTicket }: { onGetTicket?: () => void }) {
   const countdown = useCountdown(EVENT_DATE);
   const [scrollProgress, setScrollProgress] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
@@ -92,16 +92,14 @@ export default function Hero() {
               className="w-[280px] sm:w-[400px] lg:w-[520px] h-auto"
             />
             {/* Ticket banner */}
-            <a
-              href="https://forms.gle/PLACEHOLDER"
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              onClick={onGetTicket}
               className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.1] bg-white/[0.05] backdrop-blur-sm text-white/70 text-xs sm:text-sm font-medium hover:bg-white/[0.1] hover:text-white hover:border-white/[0.2] transition-all duration-300 w-fit group"
             >
               <Ticket className="h-3.5 w-3.5 text-[#FFA400]" />
               <span>Entrada gratuita — Obtén tu boleto</span>
               <ArrowRight className="h-3 w-3 text-[#FFA400] group-hover:translate-x-0.5 transition-transform" />
-            </a>
+            </button>
           </div>
 
           {/* Bottom — info bar */}
