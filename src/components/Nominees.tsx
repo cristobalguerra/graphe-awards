@@ -6,7 +6,7 @@ import CategoryIcon from "./CategoryIcon";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 
 export default function Nominees() {
-  const [activeCategory, setActiveCategory] = useState(CATEGORIES[0].id);
+  const [activeCategory, setActiveCategory] = useState<string>(CATEGORIES[0].id);
   const activeData = CATEGORIES.find((c) => c.id === activeCategory)!;
   const nominees = NOMINEES.filter((n) => n.categoryId === activeCategory);
   const ref = useScrollReveal();
