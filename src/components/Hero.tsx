@@ -2,10 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
-import { EVENT_DATE } from "@/lib/data";
 import { basePath } from "@/lib/basePath";
-import MagneticButton from "./MagneticButton";
-import { Ticket, ArrowRight } from "lucide-react";
+import { EventCountdownCard } from "./ui/event-countdown-card";
 
 const Trophy3D = dynamic(() => import("./Trophy3D"), {
   ssr: false,
@@ -16,37 +14,15 @@ const Trophy3D = dynamic(() => import("./Trophy3D"), {
   ),
 });
 
-function useCountdown(target: Date) {
-  const calc = () => {
-    const diff = target.getTime() - Date.now();
-    if (diff <= 0) return { days: 0, hours: 0, minutes: 0, seconds: 0 };
-    return {
-      days: Math.floor(diff / 86400000),
-      hours: Math.floor((diff % 86400000) / 3600000),
-      minutes: Math.floor((diff % 3600000) / 60000),
-      seconds: Math.floor((diff % 60000) / 1000),
-    };
-  };
-  const [time, setTime] = useState(calc);
-  useEffect(() => {
-    const id = setInterval(() => setTime(calc), 1000);
-    return () => clearInterval(id);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  return time;
-}
-
 export default function Hero({ onGetTicket }: { onGetTicket?: () => void }) {
-  const countdown = useCountdown(EVENT_DATE);
   const [scrollProgress, setScrollProgress] = useState(0);
   const sectionRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
-      if (!sectionRef.current) return;
-      const rect = sectionRef.current.getBoundingClientRect();
-      const sectionHeight = sectionRef.current.offsetHeight;
-      const progress = Math.max(0, Math.min(1, -rect.top / sectionHeight));
+      const scrollY = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = Math.max(0, Math.min(1, scrollY / docHeight));
       setScrollProgress(progress);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -56,26 +32,18 @@ export default function Hero({ onGetTicket }: { onGetTicket?: () => void }) {
   return (
     <section
       ref={sectionRef}
-      className="relative min-h-[160vh]"
-      style={{ backgroundColor: "#0a0a09" }}
+      className="relative min-h-screen"
     >
-      {/* Sticky container */}
-      <div className="sticky top-0 h-screen flex flex-col overflow-hidden">
-        {/* 3D Trophy — full background */}
-        <div className="absolute inset-0 z-0">
-          <Trophy3D scrollProgress={scrollProgress} />
+      {/* Container */}
+      <div className="relative h-screen flex flex-col">
+        {/* 3D Trophy — extends beyond hero to prevent border */}
+        <div className="absolute top-0 left-0 right-0 z-0" style={{ bottom: "-10rem" }}>
+          <Trophy3D scrollProgress={scrollProgress} className="!h-[calc(100%+10rem)]" />
         </div>
-
-        {/* Color glow accents — vivid */}
-        <div className="absolute top-[15%] -left-20 w-80 h-80 rounded-full opacity-[0.15] blur-[120px]" style={{ backgroundColor: "#FFB3AB" }} />
-        <div className="absolute bottom-[20%] -right-10 w-72 h-72 rounded-full opacity-[0.12] blur-[100px]" style={{ backgroundColor: "#008755" }} />
-        <div className="absolute top-[60%] left-[20%] w-60 h-60 rounded-full opacity-[0.10] blur-[100px]" style={{ backgroundColor: "#FFA400" }} />
-        <div className="absolute top-[10%] right-[25%] w-48 h-48 rounded-full opacity-[0.08] blur-[80px]" style={{ backgroundColor: "#305379" }} />
-        <div className="absolute bottom-[10%] left-[40%] w-40 h-40 rounded-full opacity-[0.10] blur-[90px]" style={{ backgroundColor: "#DB6B30" }} />
 
         {/* Content overlay */}
         <div className="relative z-10 flex flex-col h-full justify-between px-6 sm:px-12 lg:px-20 pt-24 pb-12">
-          {/* Top — title */}
+          {/* Top — logo */}
           <div
             className="transition-all duration-300"
             style={{
@@ -83,71 +51,22 @@ export default function Hero({ onGetTicket }: { onGetTicket?: () => void }) {
               transform: `translateY(${scrollProgress * -60}px)`,
             }}
           >
-            <p className="text-xs font-medium tracking-[0.3em] uppercase text-white/30 mb-6">
-              Universidad de Monterrey — LDGD
-            </p>
             <img
               src={`${basePath}/logo-white.png`}
               alt="Graphē Awards"
               className="w-[280px] sm:w-[400px] lg:w-[520px] h-auto"
             />
-            {/* Ticket banner */}
-            <button
-              onClick={onGetTicket}
-              className="mt-6 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/[0.1] bg-white/[0.05] backdrop-blur-sm text-white/70 text-xs sm:text-sm font-medium hover:bg-white/[0.1] hover:text-white hover:border-white/[0.2] transition-all duration-300 w-fit group"
-            >
-              <Ticket className="h-3.5 w-3.5 text-[#FFA400]" />
-              <span>Entrada gratuita — Obtén tu boleto</span>
-              <ArrowRight className="h-3 w-3 text-[#FFA400] group-hover:translate-x-0.5 transition-transform" />
-            </button>
           </div>
 
-          {/* Bottom — info bar */}
+          {/* Bottom — countdown card */}
           <div
-            className="flex flex-col sm:flex-row items-start sm:items-end justify-between gap-8 transition-all duration-300"
+            className="flex justify-start transition-all duration-300"
             style={{
               opacity: 1 - scrollProgress * 3,
               transform: `translateY(${scrollProgress * 40}px)`,
             }}
           >
-            {/* Countdown */}
-            <div className="flex gap-6 sm:gap-8">
-              {[
-                { val: countdown.days, label: "Días" },
-                { val: countdown.hours, label: "Hrs" },
-                { val: countdown.minutes, label: "Min" },
-                { val: countdown.seconds, label: "Seg" },
-              ].map((item) => (
-                <div key={item.label} className="text-center">
-                  <div className="text-3xl sm:text-4xl font-black text-white tabular-nums font-mono">
-                    {String(item.val).padStart(2, "0")}
-                  </div>
-                  <div className="text-[10px] font-medium text-white/25 uppercase tracking-[0.2em] mt-1">
-                    {item.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* CTA */}
-            <div className="flex gap-3">
-              <MagneticButton>
-                <a
-                  href="#nominados"
-                  className="px-7 py-3.5 bg-[#FFA400] text-black text-sm font-semibold rounded-full hover:bg-[#ffb333] transition-colors inline-block"
-                >
-                  Ver Nominados
-                </a>
-              </MagneticButton>
-              <MagneticButton>
-                <a
-                  href="#categorias"
-                  className="px-7 py-3.5 border border-white/20 text-white text-sm font-semibold rounded-full hover:border-[#FFB3AB] hover:text-[#FFB3AB] transition-colors inline-block"
-                >
-                  Categorías
-                </a>
-              </MagneticButton>
-            </div>
+            <EventCountdownCard onGetTicket={onGetTicket} />
           </div>
         </div>
 

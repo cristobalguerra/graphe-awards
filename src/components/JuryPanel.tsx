@@ -2,71 +2,22 @@
 
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import TextReveal from "./TextReveal";
-import TeamShowcase from "./ui/team-showcase";
-import type { TeamMember } from "./ui/team-showcase";
-
-// Jurado — reemplaza las fotos y datos con los reales
-const JURY_MEMBERS: TeamMember[] = [
-  {
-    id: "j1",
-    name: "Ricardo Treviño",
-    role: "Director Creativo · Estudio Nómada",
-    image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&auto=format&fit=crop&q=60",
-    social: { linkedin: "#", instagram: "#" },
-  },
-  {
-    id: "j2",
-    name: "Claudia Fernández",
-    role: "Profesora LDGD · UDEM",
-    image: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&auto=format&fit=crop&q=60",
-    social: { linkedin: "#", behance: "#" },
-  },
-  {
-    id: "j3",
-    name: "Alejandro Durán",
-    role: "Brand Strategist · Wunderman Thompson",
-    image: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&auto=format&fit=crop&q=60",
-    social: { twitter: "#", linkedin: "#" },
-  },
-  {
-    id: "j4",
-    name: "Valeria Solís",
-    role: "Ilustradora · Freelance",
-    image: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&auto=format&fit=crop&q=60",
-    social: { instagram: "#", behance: "#" },
-  },
-  {
-    id: "j5",
-    name: "Marco Peña",
-    role: "UX Lead · Softtek",
-    image: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=200&auto=format&fit=crop&q=60",
-    social: { linkedin: "#" },
-  },
-  {
-    id: "j6",
-    name: "Diana Lozano",
-    role: "Directora de Arte · Ogilvy MTY",
-    image: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=60",
-    social: { linkedin: "#", instagram: "#" },
-  },
-];
+import StaggerGrid from "./StaggerGrid";
+import TiltCard from "./TiltCard";
 
 export default function JuryPanel() {
   const ref = useScrollReveal();
 
   return (
     <section id="jurado" className="py-14 sm:py-24 relative overflow-hidden" ref={ref}>
-      <div className="absolute top-[20%] -right-16 w-64 h-64 rounded-full opacity-[0.10] blur-[100px]" style={{ backgroundColor: "#FFB3AB" }} />
-      <div className="absolute bottom-[30%] -left-10 w-48 h-48 rounded-full opacity-[0.08] blur-[80px]" style={{ backgroundColor: "#FFA400" }} />
-
       <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20 mb-6 sm:mb-10">
         <div className="line-reveal h-px bg-gradient-to-r from-[#FFB3AB]/30 via-[#FFB3AB]/10 to-transparent" />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20">
-        <div className="mb-8">
+        <div className="mb-12">
           <p className="text-[10px] font-medium tracking-[0.3em] uppercase mb-4 reveal-up" style={{ color: "#FFB3AB" }}>
-            03 / Jurado
+            03 / Próximamente
           </p>
           <TextReveal
             as="h2"
@@ -76,13 +27,33 @@ export default function JuryPanel() {
             El Jurado
           </TextReveal>
           <p className="mt-6 text-base text-white/30 max-w-lg leading-relaxed reveal-up">
-            Profesionales del diseño que evalúan cada proyecto con rigor y experiencia.
+            El jurado será anunciado próximamente.
           </p>
         </div>
 
-        <div className="reveal-up">
-          <TeamShowcase members={JURY_MEMBERS} accentColor="#FFB3AB" />
-        </div>
+        <StaggerGrid className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4" columns={6}>
+          {Array.from({ length: 6 }).map((_, i) => (
+            <TiltCard key={i} className="relative rounded-2xl">
+              <div
+                className="rounded-2xl p-6 flex flex-col items-center text-center relative overflow-hidden group border border-white/[0.06] hover:border-white/[0.12] transition-all duration-500 h-full"
+                style={{ backgroundColor: "#111110" }}
+              >
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center mb-4 opacity-20 group-hover:opacity-40 transition-opacity duration-500"
+                  style={{ backgroundColor: "rgba(255,179,171,0.1)" }}
+                >
+                  <span className="text-xl font-black" style={{ color: "#FFB3AB" }}>?</span>
+                </div>
+                <h3 className="text-xs font-semibold text-white/40 mb-1">Juez {i + 1}</h3>
+                <p className="text-[10px] text-white/20 tracking-wider uppercase">Por confirmar</p>
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-px opacity-20 group-hover:opacity-40 transition-opacity"
+                  style={{ backgroundColor: "#FFB3AB" }}
+                />
+              </div>
+            </TiltCard>
+          ))}
+        </StaggerGrid>
       </div>
     </section>
   );

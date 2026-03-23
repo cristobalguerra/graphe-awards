@@ -28,7 +28,6 @@ export default function RootLayout({
       <body className="min-h-screen">
         <SmoothScroll>
           <AnimatedOrbs />
-          <PageDust />
           <ScrollProgress />
           <CustomCursor />
           {children}

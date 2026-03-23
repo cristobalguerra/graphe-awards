@@ -1,29 +1,23 @@
 "use client";
 
-import { useRef, useState } from "react";
-import { CATEGORIES, NOMINEES } from "@/lib/data";
+import { CATEGORIES } from "@/lib/data";
 import CategoryIcon from "./CategoryIcon";
 import { useScrollReveal } from "@/lib/useScrollReveal";
 import TextReveal from "./TextReveal";
-import FlipCard from "./FlipCard";
+import StaggerGrid from "./StaggerGrid";
+import TiltCard from "./TiltCard";
 
 export default function Nominees() {
-  const [activeCategory, setActiveCategory] = useState<string>(CATEGORIES[0].id);
-  const activeData = CATEGORIES.find((c) => c.id === activeCategory)!;
-  const nominees = NOMINEES.filter((n) => n.categoryId === activeCategory);
   const ref = useScrollReveal();
 
   return (
     <section id="nominados" className="py-14 sm:py-24 relative overflow-hidden" ref={ref}>
-      <div className="absolute top-[20%] -right-20 w-72 h-72 rounded-full opacity-[0.10] blur-[100px]" style={{ backgroundColor: "#FFB3AB" }} />
-      <div className="absolute bottom-[10%] -left-10 w-56 h-56 rounded-full opacity-[0.08] blur-[90px]" style={{ backgroundColor: "#008755" }} />
-
       <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20 mb-6 sm:mb-10">
         <div className="line-reveal h-px bg-gradient-to-r from-[#FFB3AB]/30 via-[#FFB3AB]/10 to-transparent" />
       </div>
 
       <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20">
-        <div className="mb-16">
+        <div className="mb-12">
           <p className="text-[10px] font-medium tracking-[0.3em] uppercase mb-4 reveal-up" style={{ color: "#FFB3AB" }}>
             02 / Shortlist
           </p>
@@ -35,86 +29,34 @@ export default function Nominees() {
             Nominados
           </TextReveal>
           <p className="mt-6 text-base text-white/30 max-w-lg leading-relaxed reveal-up">
-            Los proyectos seleccionados para competir en cada categoría.
+            Los nominados serán anunciados próximamente.
           </p>
         </div>
 
-        <div className="reveal-up flex gap-2 overflow-x-auto hide-scrollbar pb-6 mb-12">
+        <StaggerGrid className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4" columns={4}>
           {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`flex items-center gap-2.5 px-5 py-3 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-300 tracking-wide ${
-                activeCategory === cat.id
-                  ? "text-black shadow-lg"
-                  : "border border-white/[0.08] text-white/35 hover:text-white/60 hover:border-white/15"
-              }`}
-              style={
-                activeCategory === cat.id ? { backgroundColor: cat.color } : undefined
-              }
-            >
-              <CategoryIcon icon={cat.icon} color={activeCategory === cat.id ? "#000" : cat.color} size={16} />
-              <span className="hidden sm:inline">{cat.name}</span>
-            </button>
+            <TiltCard key={cat.id} className="relative rounded-2xl">
+              <div
+                className="rounded-2xl p-8 flex flex-col items-center text-center relative overflow-hidden group border border-white/[0.06] hover:border-white/[0.12] transition-all duration-500 h-full"
+                style={{ backgroundColor: "#111110" }}
+              >
+                <div
+                  className="w-14 h-14 rounded-full flex items-center justify-center mb-5 opacity-30 group-hover:opacity-60 transition-opacity duration-500"
+                  style={{ backgroundColor: `${cat.color}15` }}
+                >
+                  <CategoryIcon icon={cat.id} color={cat.color} size={24} />
+                </div>
+                <h3 className="text-sm font-semibold text-white/50 mb-1 tracking-wide">{cat.name}</h3>
+                <p className="text-[10px] text-white/20 tracking-wider uppercase">Por anunciar</p>
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-px opacity-20 group-hover:opacity-40 transition-opacity"
+                  style={{ backgroundColor: cat.color }}
+                />
+              </div>
+            </TiltCard>
           ))}
-        </div>
-
-        <Carousel nominees={nominees} color={activeData.color} categoryName={activeData.name} />
+        </StaggerGrid>
       </div>
     </section>
-  );
-}
-
-function Carousel({ nominees, color, categoryName }: { nominees: typeof NOMINEES; color: string; categoryName: string }) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const scroll = (dir: "left" | "right") => {
-    scrollRef.current?.scrollBy({ left: dir === "left" ? -340 : 340, behavior: "smooth" });
-  };
-
-  return (
-    <div className="relative group">
-      <button onClick={() => scroll("left")} className="absolute -left-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/5 backdrop-blur-md flex items-center justify-center hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100" aria-label="Anterior">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polyline points="15 18 9 12 15 6"/></svg>
-      </button>
-      <button onClick={() => scroll("right")} className="absolute -right-4 top-1/2 -translate-y-1/2 z-10 w-12 h-12 rounded-full bg-white/5 backdrop-blur-md flex items-center justify-center hover:bg-white/10 transition-all opacity-0 group-hover:opacity-100" aria-label="Siguiente">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="1.5"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-
-      <div ref={scrollRef} className="flex gap-5 overflow-x-auto hide-scrollbar py-2">
-        {nominees.map((nom) => (
-          <FlipCard
-            key={nom.id}
-            className="flex-shrink-0 w-[300px] h-[340px]"
-            front={
-              <div className="w-full h-full rounded-2xl overflow-hidden border border-white/[0.06] hover:border-white/[0.12] transition-all duration-500" style={{ backgroundColor: "#111110" }}>
-                <div className="h-52 flex items-center justify-center" style={{ backgroundColor: `${color}08` }}>
-                  <span className="text-7xl font-black opacity-[0.06]" style={{ color }}>{nom.project.charAt(0)}</span>
-                </div>
-                <div className="p-6">
-                  <h3 className="font-bold text-lg text-white mb-1 tracking-tight">{nom.project}</h3>
-                  <p className="text-sm text-white/30">{nom.name}</p>
-                  <div className="mt-4">
-                    <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold tracking-wide" style={{ backgroundColor: `${color}15`, color }}>{nom.semester}</span>
-                  </div>
-                </div>
-              </div>
-            }
-            back={
-              <div className="w-full h-full rounded-2xl overflow-hidden border border-white/[0.12] flex flex-col items-center justify-center p-8 text-center" style={{ backgroundColor: "#111110" }}>
-                <div className="w-12 h-12 rounded-full flex items-center justify-center mb-4" style={{ backgroundColor: `${color}20` }}>
-                  <span className="text-xl font-black" style={{ color }}>{nom.project.charAt(0)}</span>
-                </div>
-                <h3 className="font-bold text-lg text-white mb-2">{nom.project}</h3>
-                <p className="text-sm text-white/40 mb-1">{nom.name}</p>
-                <p className="text-xs text-white/20 mb-4">{categoryName} · {nom.semester}</p>
-                <div className="mt-2 px-5 py-2 rounded-full text-xs font-semibold border transition-colors" style={{ borderColor: color, color }}>
-                  Ver Proyecto
-                </div>
-              </div>
-            }
-          />
-        ))}
-      </div>
-    </div>
   );
 }

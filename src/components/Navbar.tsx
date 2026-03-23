@@ -1,84 +1,58 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import { basePath } from "@/lib/basePath";
+import { MenuContainer, MenuItem } from "./ui/fluid-menu";
+import { Menu as MenuIcon, X, LayoutList, Star, Glasses, Search, Trophy } from "lucide-react";
 
 const links = [
-  { href: "#categorias", label: "Categorías" },
-  { href: "#nominados", label: "Nominados" },
-  { href: "#jurado", label: "Jurado" },
-  { href: "#criterios", label: "Criterios" },
-  { href: "#ganadores", label: "Ganadores" },
+  { href: "#categorias", icon: LayoutList, label: "Categorías" },
+  { href: "#nominados", icon: Star, label: "Nominados" },
+  { href: "#jurado", icon: Glasses, label: "Jurado" },
+  { href: "#criterios", icon: Search, label: "Criterios" },
+  { href: "#ganadores", icon: Trophy, label: "Ganadores" },
 ];
 
 export default function Navbar() {
-  const [open, setOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 100);
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
-    <nav
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? "bg-[#0a0a09]/90 backdrop-blur-xl border-b border-white/[0.06]"
-          : "bg-transparent"
-      }`}
-    >
-      <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20">
-        <div className="flex items-center justify-between h-16">
-          <a href="#" className="h-5 w-28 block">
-            <img
-              src={`${basePath}/logo-white.png`}
-              alt="Graphē Awards"
-              className="h-full w-auto object-contain"
-            />
-          </a>
-
-          <div className="hidden md:flex items-center gap-8">
-            {links.map((l) => (
-              <a
-                key={l.href}
-                href={l.href}
-                className="text-[10px] font-medium tracking-[0.15em] uppercase text-white/30 hover:text-white transition-colors duration-300"
-              >
-                {l.label}
-              </a>
-            ))}
-          </div>
-
-          <button
-            onClick={() => setOpen(!open)}
-            className="md:hidden p-2"
-            aria-label="Menu"
-          >
-            <div className="w-5 flex flex-col gap-1">
-              <span className={`block h-0.5 bg-white transition-all ${open ? "rotate-45 translate-y-1.5" : ""}`} />
-              <span className={`block h-0.5 bg-white transition-all ${open ? "opacity-0" : ""}`} />
-              <span className={`block h-0.5 bg-white transition-all ${open ? "-rotate-45 -translate-y-1.5" : ""}`} />
-            </div>
-          </button>
-        </div>
+    <>
+      {/* Logo - fixed top left */}
+      <div className="fixed top-5 left-6 sm:left-12 lg:left-20 z-50">
+        <a href="#" className="h-4 w-auto block">
+          <img
+            src={`${basePath}/logo-graphe.svg`}
+            alt="Graphē Awards"
+            className="h-4 w-auto object-contain"
+          />
+        </a>
       </div>
 
-      {open && (
-        <div className="md:hidden bg-[#0a0a09]/95 backdrop-blur-xl px-6 pb-4">
+      {/* Fluid menu - fixed top right */}
+      <div className="fixed top-4 right-6 sm:right-12 lg:right-20 z-[60]">
+        <MenuContainer>
+          <MenuItem
+            icon={
+              <div className="relative w-6 h-6">
+                <div className="absolute inset-0 transition-all duration-300 ease-in-out origin-center opacity-100 scale-100 rotate-0 [div[data-expanded=true]_&]:opacity-0 [div[data-expanded=true]_&]:scale-0 [div[data-expanded=true]_&]:rotate-180">
+                  <MenuIcon size={22} strokeWidth={1.5} className="text-white" />
+                </div>
+                <div className="absolute inset-0 transition-all duration-300 ease-in-out origin-center opacity-0 scale-0 -rotate-180 [div[data-expanded=true]_&]:opacity-100 [div[data-expanded=true]_&]:scale-100 [div[data-expanded=true]_&]:rotate-0">
+                  <X size={22} strokeWidth={1.5} className="text-white" />
+                </div>
+              </div>
+            }
+          />
           {links.map((l) => (
-            <a
+            <MenuItem
               key={l.href}
-              href={l.href}
-              onClick={() => setOpen(false)}
-              className="block py-3 text-sm font-medium text-white/50 hover:text-white border-b border-white/5 last:border-0"
-            >
-              {l.label}
-            </a>
+              icon={<l.icon size={18} strokeWidth={1.5} className="text-white/70" />}
+              label={l.label}
+              onClick={() => {
+                document.querySelector(l.href)?.scrollIntoView({ behavior: "smooth" });
+              }}
+            />
           ))}
-        </div>
-      )}
-    </nav>
+        </MenuContainer>
+      </div>
+    </>
   );
 }

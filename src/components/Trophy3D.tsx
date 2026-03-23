@@ -309,7 +309,7 @@ function TrophyModel({ scrollProgress }: { scrollProgress: number }) {
 
   useFrame(() => {
     if (groupRef.current) {
-      groupRef.current.rotation.y = scrollProgress * Math.PI * 2;
+      groupRef.current.rotation.y = scrollProgress * Math.PI * 6;
       groupRef.current.rotation.x = Math.sin(scrollProgress * Math.PI) * 0.15;
     }
   });
@@ -339,7 +339,7 @@ export default function Trophy3D({
   className?: string;
 }) {
   return (
-    <div className={`w-full h-full ${className}`}>
+    <div className={`w-full h-full relative ${className}`}>
       <Suspense fallback={<FallbackLoader />}>
         <Canvas
           camera={{ position: [0, 0.1, 2.4], fov: 40 }}
