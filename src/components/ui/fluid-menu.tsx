@@ -43,8 +43,8 @@ export function MenuContainer({ children }: { children: React.ReactNode }) {
 
   // Extract labels from MenuItem children
   const getLabel = (child: React.ReactNode): string | undefined => {
-    if (React.isValidElement(child) && child.props.label) {
-      return child.props.label
+    if (React.isValidElement(child) && (child.props as Record<string, unknown>).label) {
+      return (child.props as Record<string, unknown>).label as string
     }
     return undefined
   }

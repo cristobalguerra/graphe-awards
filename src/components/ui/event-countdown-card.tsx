@@ -34,7 +34,7 @@ export function EventCountdownCard({ onGetTicket, className }: EventCountdownCar
     initial: { scale: 1, opacity: 1 },
     pulse: shouldAnimate ? {
       scale: [1, 1.08, 1],
-      transition: { duration: 1, repeat: Infinity, ease: "easeInOut" },
+      transition: { duration: 1, repeat: Infinity, ease: "easeInOut" as const },
     } : {},
   }
 
