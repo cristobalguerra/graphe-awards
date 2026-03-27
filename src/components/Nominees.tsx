@@ -105,7 +105,6 @@ export default function Nominees() {
                         >
                           {cat?.name}
                         </span>
-                        <span className="text-[10px] text-white/25">{n.semester}</span>
                       </div>
                       <h3 className="text-sm font-semibold text-white mb-0.5">{n.name}</h3>
                       <p className="text-xs text-white/40 italic">"{n.project}"</p>

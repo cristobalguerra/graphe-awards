@@ -9,55 +9,56 @@ import {
   type NomineeDoc,
 } from "@/lib/firestore";
 import { CATEGORIES } from "@/lib/data";
-import { Plus, Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, Image } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
 
-const EMPTY: Omit<NomineeDoc, "id"> = {
+const NOMINEES_PER_CATEGORY = 3;
+
+const EMPTY_NOMINEE = (categoryId: string, order: number): Omit<NomineeDoc, "id"> => ({
   name: "",
   project: "",
   semester: "",
-  categoryId: "fotografia",
+  categoryId,
   images: [{ url: "" }, { url: "" }, { url: "" }],
   description: "",
-  order: 0,
-};
+  order,
+});
+
 
 export default function AdminNominees() {
   const [nominees, setNominees] = useState<NomineeDoc[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [editData, setEditData] = useState<Omit<NomineeDoc, "id">>(EMPTY);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newData, setNewData] = useState<Omit<NomineeDoc, "id">>(EMPTY);
+  const [editData, setEditData] = useState<Omit<NomineeDoc, "id"> | null>(null);
+  const [addingSlot, setAddingSlot] = useState<{ catId: string; slot: number } | null>(null);
+  const [newData, setNewData] = useState<Omit<NomineeDoc, "id"> | null>(null);
   const [saving, setSaving] = useState(false);
-  const [filterCat, setFilterCat] = useState<string>("all");
 
   useEffect(() => {
-    getNominees().then((data) => {
-      setNominees(data);
-      setLoading(false);
-    });
+    refresh();
   }, []);
 
   async function refresh() {
     const data = await getNominees();
     setNominees(data);
+    setLoading(false);
   }
 
   async function handleAdd() {
-    if (!newData.name || !newData.project) return;
+    if (!newData || !newData.name || !newData.project) return;
     setSaving(true);
-    const filtered = nominees.filter((n) => n.categoryId === newData.categoryId);
-    await addNominee({ ...newData, order: filtered.length });
-    setNewData(EMPTY);
-    setShowAdd(false);
+    await addNominee(newData);
+    setAddingSlot(null);
+    setNewData(null);
     await refresh();
     setSaving(false);
   }
 
   async function handleUpdate(id: string) {
+    if (!editData) return;
     setSaving(true);
     await updateNominee(id, editData);
     setEditingId(null);
+    setEditData(null);
     await refresh();
     setSaving(false);
   }
@@ -68,8 +69,6 @@ export default function AdminNominees() {
     await refresh();
   }
 
-  const filtered = filterCat === "all" ? nominees : nominees.filter((n) => n.categoryId === filterCat);
-
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -78,161 +77,167 @@ export default function AdminNominees() {
     );
   }
 
+  const total = nominees.length;
+
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h2 className="text-lg font-bold">Nominados</h2>
-          <p className="text-white/30 text-xs mt-0.5">{nominees.length} proyectos</p>
-        </div>
-        <button
-          onClick={() => { setShowAdd(true); setNewData(EMPTY); }}
-          className="flex items-center gap-1.5 bg-[#FFA400] text-black text-xs font-semibold px-3 py-2 rounded-lg hover:bg-[#ffb520] transition-colors"
-        >
-          <Plus className="w-3.5 h-3.5" />
-          Agregar nominado
-        </button>
+      <div className="mb-8">
+        <h2 className="text-lg font-bold">Nominados</h2>
+        <p className="text-white/30 text-xs mt-0.5">
+          {total} de {CATEGORIES.length * NOMINEES_PER_CATEGORY} slots llenos · 3 proyectos por categoría
+        </p>
       </div>
 
-      {/* Category filter */}
-      <div className="flex items-center gap-2 mb-5 overflow-x-auto pb-1 scrollbar-hide">
-        <button
-          onClick={() => setFilterCat("all")}
-          className={`text-xs px-3 py-1.5 rounded-full whitespace-nowrap transition-all border ${
-            filterCat === "all"
-              ? "bg-white/10 border-white/20 text-white"
-              : "border-white/[0.06] text-white/30 hover:text-white/60"
-          }`}
-        >
-          Todas ({nominees.length})
-        </button>
+      {/* Una sección por categoría */}
+      <div className="space-y-8">
         {CATEGORIES.map((cat) => {
-          const count = nominees.filter((n) => n.categoryId === cat.id).length;
-          return (
-            <button
-              key={cat.id}
-              onClick={() => setFilterCat(cat.id)}
-              className={`text-xs px-3 py-1.5 rounded-full whitespace-nowrap transition-all border ${
-                filterCat === cat.id
-                  ? "text-black font-semibold"
-                  : "border-white/[0.06] text-white/30 hover:text-white/60"
-              }`}
-              style={
-                filterCat === cat.id
-                  ? { backgroundColor: cat.color, borderColor: cat.color }
-                  : {}
-              }
-            >
-              {cat.name} ({count})
-            </button>
-          );
-        })}
-      </div>
+          const catNominees = nominees
+            .filter((n) => n.categoryId === cat.id)
+            .sort((a, b) => a.order - b.order);
 
-      {/* Add form */}
-      {showAdd && (
-        <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-5 mb-4">
-          <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-4">Nuevo nominado</p>
-          <NomineeForm data={newData} onChange={setNewData} />
-          <div className="flex items-center gap-2 mt-4">
-            <button
-              onClick={handleAdd}
-              disabled={saving}
-              className="flex items-center gap-1.5 bg-[#FFA400] text-black text-xs font-semibold px-3 py-2 rounded-lg hover:bg-[#ffb520] transition-colors disabled:opacity-50"
-            >
-              <Check className="w-3.5 h-3.5" />
-              {saving ? "Guardando..." : "Guardar"}
-            </button>
-            <button
-              onClick={() => setShowAdd(false)}
-              className="text-white/30 hover:text-white/60 text-xs px-3 py-2 transition-colors"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Nominees grid */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-        {filtered.length === 0 && (
-          <div className="col-span-3 text-center py-16 text-white/20 text-sm">
-            No hay nominados en esta categoría.
-          </div>
-        )}
-        {filtered.map((n) => {
-          const cat = CATEGORIES.find((c) => c.id === n.categoryId);
           return (
-            <div
-              key={n.id}
-              className="bg-white/[0.04] border border-white/[0.07] rounded-2xl overflow-hidden hover:border-white/[0.12] transition-all"
-            >
-              {editingId === n.id ? (
-                <div className="p-4">
-                  <NomineeForm data={editData} onChange={setEditData} />
-                  <div className="flex items-center gap-2 mt-4">
-                    <button
-                      onClick={() => handleUpdate(n.id!)}
-                      disabled={saving}
-                      className="flex items-center gap-1.5 bg-[#FFA400] text-black text-xs font-semibold px-3 py-2 rounded-lg hover:bg-[#ffb520] transition-colors disabled:opacity-50"
-                    >
-                      <Check className="w-3.5 h-3.5" />
-                      {saving ? "Guardando..." : "Guardar"}
-                    </button>
-                    <button
-                      onClick={() => setEditingId(null)}
-                      className="text-white/30 hover:text-white/60 text-xs px-3 py-2 transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <>
-                  {/* Image slider preview */}
-                  <NomineeSliderPreview images={n.images} />
-                  {/* Info */}
-                  <div className="p-4">
-                    <div className="flex items-start justify-between gap-2">
-                      <div className="min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span
-                            className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                            style={{ backgroundColor: `${cat?.color}20`, color: cat?.color }}
-                          >
-                            {cat?.name}
-                          </span>
-                          <span className="text-[10px] text-white/30">{n.semester}</span>
-                        </div>
-                        <p className="text-sm font-semibold text-white truncate">{n.name}</p>
-                        <p className="text-xs text-white/40 truncate italic">"{n.project}"</p>
-                      </div>
-                      <div className="flex items-center gap-1 flex-shrink-0">
+            <div key={cat.id} className="rounded-2xl border border-white/[0.07] overflow-hidden">
+              {/* Category header */}
+              <div
+                className="px-5 py-3 flex items-center gap-3 border-b border-white/[0.06]"
+                style={{ backgroundColor: `${cat.color}10` }}
+              >
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: cat.color }}
+                />
+                <span className="text-sm font-semibold text-white">{cat.name}</span>
+                <span className="text-xs text-white/30 ml-auto">
+                  {catNominees.length}/{NOMINEES_PER_CATEGORY} nominados
+                </span>
+              </div>
+
+              {/* 3 slots */}
+              <div className="grid sm:grid-cols-3 divide-x divide-white/[0.05]">
+                {Array.from({ length: NOMINEES_PER_CATEGORY }).map((_, slotIdx) => {
+                  const nominee = catNominees[slotIdx];
+                  const isEditing = nominee && editingId === nominee.id;
+                  const isAdding = !nominee && addingSlot?.catId === cat.id && addingSlot?.slot === slotIdx;
+
+                  return (
+                    <div key={slotIdx} className="min-h-[180px] bg-[#111110]">
+                      {/* Slot vacío */}
+                      {!nominee && !isAdding && (
                         <button
                           onClick={() => {
-                            setEditingId(n.id!);
-                            setEditData({
-                              name: n.name, project: n.project, semester: n.semester,
-                              categoryId: n.categoryId,
-                              images: n.images.length >= 3 ? n.images : [...n.images, ...Array(3 - n.images.length).fill({ url: "" })],
-                              description: n.description || "", order: n.order
-                            });
+                            setAddingSlot({ catId: cat.id, slot: slotIdx });
+                            setNewData(EMPTY_NOMINEE(cat.id, slotIdx));
                           }}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all"
+                          className="w-full h-full min-h-[180px] flex flex-col items-center justify-center gap-2 text-white/20 hover:text-white/40 hover:bg-white/[0.02] transition-all group"
                         >
-                          <Pencil className="w-3.5 h-3.5" />
+                          <div
+                            className="w-8 h-8 rounded-full border border-dashed border-white/10 group-hover:border-white/20 flex items-center justify-center transition-all"
+                            style={{ borderColor: `${cat.color}30` }}
+                          >
+                            <Plus className="w-4 h-4" style={{ color: cat.color + "60" }} />
+                          </div>
+                          <span className="text-[10px] tracking-wider uppercase">Nominado {slotIdx + 1}</span>
                         </button>
-                        <button
-                          onClick={() => handleDelete(n.id!)}
-                          className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 hover:text-red-400 hover:bg-red-400/10 transition-all"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
+                      )}
+
+                      {/* Formulario de agregar */}
+                      {isAdding && newData && (
+                        <div className="p-4 space-y-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: cat.color }}>
+                            Nominado {slotIdx + 1}
+                          </p>
+                          <NomineeForm data={newData} onChange={setNewData} catColor={cat.color} />
+                          <div className="flex gap-2 pt-1">
+                            <button
+                              onClick={handleAdd}
+                              disabled={saving}
+                              className="flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 text-black"
+                              style={{ backgroundColor: cat.color }}
+                            >
+                              <Check className="w-3 h-3" />
+                              {saving ? "..." : "Guardar"}
+                            </button>
+                            <button
+                              onClick={() => { setAddingSlot(null); setNewData(null); }}
+                              className="text-[11px] text-white/30 hover:text-white/60 px-2 py-1.5 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Nominado existente */}
+                      {nominee && !isEditing && (
+                        <div className="h-full">
+                          {/* Slider preview */}
+                          <SliderPreview images={nominee.images} color={cat.color} />
+                          {/* Info */}
+                          <div className="p-3">
+                            <p className="text-xs font-semibold text-white leading-tight">{nominee.name}</p>
+                            <p className="text-[11px] text-white/40 italic mt-0.5">"{nominee.project}"</p>
+                            <p className="text-[10px] text-white/25 mt-1 uppercase tracking-wider">{nominee.semester}</p>
+                            <div className="flex gap-1 mt-2">
+                              <button
+                                onClick={() => {
+                                  setEditingId(nominee.id!);
+                                  setEditData({
+                                    name: nominee.name,
+                                    project: nominee.project,
+                                    semester: nominee.semester,
+                                    categoryId: nominee.categoryId,
+                                    images: nominee.images.length >= 3
+                                      ? nominee.images
+                                      : [...nominee.images, ...Array(3 - nominee.images.length).fill({ url: "" })],
+                                    description: nominee.description || "",
+                                    order: nominee.order,
+                                  });
+                                }}
+                                className="flex items-center gap-1 text-[10px] text-white/30 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition-all"
+                              >
+                                <Pencil className="w-3 h-3" /> Editar
+                              </button>
+                              <button
+                                onClick={() => handleDelete(nominee.id!)}
+                                className="flex items-center gap-1 text-[10px] text-white/30 hover:text-red-400 px-2 py-1 rounded-lg hover:bg-red-400/10 transition-all"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Editando nominado existente */}
+                      {nominee && isEditing && editData && (
+                        <div className="p-4 space-y-3">
+                          <p className="text-[10px] font-semibold uppercase tracking-wider mb-3" style={{ color: cat.color }}>
+                            Editando nominado {slotIdx + 1}
+                          </p>
+                          <NomineeForm data={editData} onChange={setEditData} catColor={cat.color} />
+                          <div className="flex gap-2 pt-1">
+                            <button
+                              onClick={() => handleUpdate(nominee.id!)}
+                              disabled={saving}
+                              className="flex items-center gap-1 text-[11px] font-semibold px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 text-black"
+                              style={{ backgroundColor: cat.color }}
+                            >
+                              <Check className="w-3 h-3" />
+                              {saving ? "..." : "Guardar"}
+                            </button>
+                            <button
+                              onClick={() => { setEditingId(null); setEditData(null); }}
+                              className="text-[11px] text-white/30 hover:text-white/60 px-2 py-1.5 transition-colors"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </div>
-                </>
-              )}
+                  );
+                })}
+              </div>
             </div>
           );
         })}
@@ -241,47 +246,35 @@ export default function AdminNominees() {
   );
 }
 
-// ─── Nominee Slider Preview ───────────────────────────────────────────────────
-function NomineeSliderPreview({ images }: { images: { url: string; caption?: string }[] }) {
+// ─── Slider preview ───────────────────────────────────────────────────────────
+function SliderPreview({ images, color }: { images: { url: string }[]; color: string }) {
   const [idx, setIdx] = useState(0);
-  const validImages = images.filter((img) => img.url);
-
-  if (validImages.length === 0) {
+  const valid = images?.filter((i) => i.url) || [];
+  if (valid.length === 0) {
     return (
-      <div className="aspect-video bg-white/[0.03] flex items-center justify-center">
-        <Image className="w-6 h-6 text-white/10" />
+      <div className="aspect-video bg-white/[0.02] flex items-center justify-center">
+        <ImageIcon className="w-5 h-5 text-white/10" />
       </div>
     );
   }
-
   return (
-    <div className="aspect-video relative overflow-hidden bg-black group">
-      <img
-        src={validImages[idx].url}
-        alt={`Imagen ${idx + 1}`}
-        className="w-full h-full object-cover"
-      />
-      {validImages.length > 1 && (
+    <div className="aspect-video relative overflow-hidden group bg-black">
+      <img src={valid[idx].url} alt="" className="w-full h-full object-cover" />
+      {valid.length > 1 && (
         <>
-          <button
-            onClick={() => setIdx((i) => (i - 1 + validImages.length) % validImages.length)}
-            className="absolute left-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <ChevronLeft className="w-3.5 h-3.5 text-white" />
+          <button onClick={() => setIdx((i) => (i - 1 + valid.length) % valid.length)}
+            className="absolute left-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <ChevronLeft className="w-3 h-3 text-white" />
           </button>
-          <button
-            onClick={() => setIdx((i) => (i + 1) % validImages.length)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-          >
-            <ChevronRight className="w-3.5 h-3.5 text-white" />
+          <button onClick={() => setIdx((i) => (i + 1) % valid.length)}
+            className="absolute right-1 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-black/70 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+            <ChevronRight className="w-3 h-3 text-white" />
           </button>
-          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-            {validImages.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setIdx(i)}
-                className={`w-1.5 h-1.5 rounded-full transition-all ${i === idx ? "bg-white" : "bg-white/30"}`}
-              />
+          <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1">
+            {valid.map((_, i) => (
+              <button key={i} onClick={() => setIdx(i)}
+                className="w-1 h-1 rounded-full transition-all"
+                style={{ backgroundColor: i === idx ? color : "rgba(255,255,255,0.3)" }} />
             ))}
           </div>
         </>
@@ -290,13 +283,15 @@ function NomineeSliderPreview({ images }: { images: { url: string; caption?: str
   );
 }
 
-// ─── Nominee Form ─────────────────────────────────────────────────────────────
+// ─── Nominee form ─────────────────────────────────────────────────────────────
 function NomineeForm({
   data,
   onChange,
+  catColor,
 }: {
   data: Omit<NomineeDoc, "id">;
-  onChange: (d: Omit<NomineeDoc, "id">) => void;
+  onChange: (d: Omit<NomineeDoc, "id"> | null) => void;
+  catColor: string;
 }) {
   function updateImage(idx: number, url: string) {
     const imgs = [...data.images];
@@ -304,68 +299,35 @@ function NomineeForm({
     onChange({ ...data, images: imgs });
   }
 
-  return (
-    <div className="space-y-3">
-      <div className="grid sm:grid-cols-2 gap-3">
-        <input
-          value={data.name}
-          onChange={(e) => onChange({ ...data, name: e.target.value })}
-          placeholder="Nombre del estudiante *"
-          className="bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors"
-        />
-        <input
-          value={data.project}
-          onChange={(e) => onChange({ ...data, project: e.target.value })}
-          placeholder="Nombre del proyecto *"
-          className="bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors"
-        />
-        <input
-          value={data.semester}
-          onChange={(e) => onChange({ ...data, semester: e.target.value })}
-          placeholder="Semestre (ej. 7mo)"
-          className="bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors"
-        />
-        <select
-          value={data.categoryId}
-          onChange={(e) => onChange({ ...data, categoryId: e.target.value })}
-          className="bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-[#FFA400]/40 transition-colors"
-        >
-          {CATEGORIES.map((cat) => (
-            <option key={cat.id} value={cat.id} className="bg-[#111]">{cat.name}</option>
-          ))}
-        </select>
-      </div>
-      <textarea
-        value={data.description}
-        onChange={(e) => onChange({ ...data, description: e.target.value })}
-        placeholder="Descripción del proyecto"
-        rows={2}
-        className="w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors resize-none"
-      />
+  const inputCls = "w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none transition-colors";
 
-      {/* Images 16:9 */}
-      <div>
-        <p className="text-[10px] text-white/30 uppercase tracking-wider mb-2">Imágenes del proyecto (formato 16:9)</p>
-        <div className="grid gap-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="text-[10px] text-white/20 w-5">{i + 1}.</span>
-                <input
-                  value={data.images[i]?.url || ""}
-                  onChange={(e) => updateImage(i, e.target.value)}
-                  placeholder={`URL imagen ${i + 1}`}
-                  className="flex-1 bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors"
-                />
+  return (
+    <div className="space-y-2">
+      <input value={data.name} onChange={(e) => onChange({ ...data, name: e.target.value })}
+        placeholder="Nombre del estudiante *" className={inputCls}
+        style={{ borderColor: data.name ? `${catColor}40` : undefined }} />
+      <input value={data.project} onChange={(e) => onChange({ ...data, project: e.target.value })}
+        placeholder="Nombre del proyecto *" className={inputCls} />
+
+      {/* 3 imágenes */}
+      <div className="space-y-1.5">
+        <p className="text-[9px] text-white/20 uppercase tracking-widest">Imágenes 16:9</p>
+        {[0, 1, 2].map((i) => (
+          <div key={i} className="flex items-center gap-2">
+            <span className="text-[9px] text-white/20 w-3">{i + 1}</span>
+            <input
+              value={data.images[i]?.url || ""}
+              onChange={(e) => updateImage(i, e.target.value)}
+              placeholder={`URL imagen ${i + 1}`}
+              className={inputCls}
+            />
+            {data.images[i]?.url && (
+              <div className="w-8 h-5 rounded overflow-hidden flex-shrink-0">
+                <img src={data.images[i].url} alt="" className="w-full h-full object-cover" />
               </div>
-              {data.images[i]?.url && (
-                <div className="ml-7 aspect-video w-32 rounded-lg overflow-hidden">
-                  <img src={data.images[i].url} alt="" className="w-full h-full object-cover" />
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

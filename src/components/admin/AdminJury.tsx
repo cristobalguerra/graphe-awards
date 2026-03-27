@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getJury,
   addJuryMember,
@@ -8,13 +8,14 @@ import {
   deleteJuryMember,
   type JuryMember,
 } from "@/lib/firestore";
-import { Plus, Trash2, Pencil, Check, X, UserCircle2 } from "lucide-react";
+import { storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { Plus, Trash2, Pencil, Check, X, UserCircle2, Upload, Loader2 } from "lucide-react";
 
 const EMPTY: Omit<JuryMember, "id"> = {
   name: "",
   role: "",
   photo: "",
-  linkedin: "",
   order: 0,
 };
 
@@ -89,7 +90,7 @@ export default function AdminJury() {
 
       {/* Add form */}
       {showAdd && (
-        <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-5 mb-4">
+        <div className="bg-white/[0.04] border border-white/[0.08] rounded-2xl p-5 mb-5">
           <p className="text-xs font-semibold text-white/50 uppercase tracking-wider mb-4">Nuevo juez</p>
           <JuryForm data={newData} onChange={setNewData} />
           <div className="flex items-center gap-2 mt-4">
@@ -103,9 +104,8 @@ export default function AdminJury() {
             </button>
             <button
               onClick={() => setShowAdd(false)}
-              className="flex items-center gap-1.5 text-white/30 hover:text-white/60 text-xs px-3 py-2 transition-colors"
+              className="text-white/30 hover:text-white/60 text-xs px-3 py-2 transition-colors"
             >
-              <X className="w-3.5 h-3.5" />
               Cancelar
             </button>
           </div>
@@ -126,7 +126,10 @@ export default function AdminJury() {
           >
             {editingId === m.id ? (
               <div>
-                <JuryForm data={editData} onChange={setEditData} />
+                <JuryForm
+                  data={editData}
+                  onChange={setEditData}
+                />
                 <div className="flex items-center gap-2 mt-4">
                   <button
                     onClick={() => handleUpdate(m.id!)}
@@ -146,8 +149,7 @@ export default function AdminJury() {
               </div>
             ) : (
               <div className="flex items-start gap-3">
-                {/* Photo */}
-                <div className="w-12 h-12 rounded-xl overflow-hidden bg-white/[0.05] flex-shrink-0">
+                <div className="w-14 h-14 rounded-xl overflow-hidden bg-white/[0.05] flex-shrink-0">
                   {m.photo ? (
                     <img src={m.photo} alt={m.name} className="w-full h-full object-cover" />
                   ) : (
@@ -156,20 +158,16 @@ export default function AdminJury() {
                     </div>
                   )}
                 </div>
-                {/* Info */}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">{m.name}</p>
                   <p className="text-xs text-white/40 truncate">{m.role}</p>
-                  {m.linkedin && (
-                    <a href={m.linkedin} target="_blank" rel="noopener noreferrer" className="text-[10px] text-[#FFA400]/60 hover:text-[#FFA400] transition-colors mt-0.5 block truncate">
-                      LinkedIn ↗
-                    </a>
-                  )}
                 </div>
-                {/* Actions */}
                 <div className="flex items-center gap-1 flex-shrink-0">
                   <button
-                    onClick={() => { setEditingId(m.id!); setEditData({ name: m.name, role: m.role, photo: m.photo, linkedin: m.linkedin || "", order: m.order }); }}
+                    onClick={() => {
+                      setEditingId(m.id!);
+                      setEditData({ name: m.name, role: m.role, photo: m.photo, order: m.order });
+                    }}
                     className="w-7 h-7 flex items-center justify-center rounded-lg text-white/30 hover:text-white hover:bg-white/10 transition-all"
                   >
                     <Pencil className="w-3.5 h-3.5" />
@@ -190,6 +188,86 @@ export default function AdminJury() {
   );
 }
 
+// ─── Photo uploader ───────────────────────────────────────────────────────────
+function PhotoUploader({
+  value,
+  onChange,
+}: {
+  value: string;
+  onChange: (url: string) => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `jury/${Date.now()}-${file.name}`);
+      await uploadBytes(storageRef, file);
+      const url = await getDownloadURL(storageRef);
+      onChange(url);
+    } catch (err) {
+      console.error(err);
+      alert("Error al subir la foto. Verifica los permisos de Firebase Storage.");
+    }
+    setUploading(false);
+  }
+
+  return (
+    <div className="flex items-center gap-3">
+      {/* Preview */}
+      <div
+        className="w-16 h-16 rounded-xl overflow-hidden bg-white/[0.05] border border-white/[0.08] flex-shrink-0 cursor-pointer hover:border-[#FFA400]/40 transition-colors"
+        onClick={() => inputRef.current?.click()}
+      >
+        {value ? (
+          <img src={value} alt="preview" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex flex-col items-center justify-center gap-1">
+            <UserCircle2 className="w-6 h-6 text-white/20" />
+          </div>
+        )}
+      </div>
+
+      {/* Upload button */}
+      <div className="flex-1">
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="flex items-center gap-2 text-xs text-white/40 hover:text-white/70 border border-white/[0.08] hover:border-white/20 rounded-lg px-3 py-2 transition-all w-full justify-center"
+        >
+          {uploading ? (
+            <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Subiendo...</>
+          ) : (
+            <><Upload className="w-3.5 h-3.5" /> {value ? "Cambiar foto" : "Subir foto"}</>
+          )}
+        </button>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange("")}
+            className="text-[10px] text-white/20 hover:text-red-400 mt-1 w-full text-center transition-colors"
+          >
+            Quitar foto
+          </button>
+        )}
+      </div>
+
+      <input
+        ref={inputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleFile}
+      />
+    </div>
+  );
+}
+
+// ─── Jury Form ────────────────────────────────────────────────────────────────
 function JuryForm({
   data,
   onChange,
@@ -197,39 +275,28 @@ function JuryForm({
   data: Omit<JuryMember, "id">;
   onChange: (d: Omit<JuryMember, "id">) => void;
 }) {
+  const inputCls = "w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors";
+
   return (
-    <div className="grid sm:grid-cols-2 gap-3">
+    <div className="space-y-3">
+      {/* Photo upload */}
+      <PhotoUploader
+        value={data.photo}
+        onChange={(url) => onChange({ ...data, photo: url })}
+      />
+
       <input
         value={data.name}
         onChange={(e) => onChange({ ...data, name: e.target.value })}
         placeholder="Nombre completo *"
-        className="bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors"
+        className={inputCls}
       />
       <input
         value={data.role}
         onChange={(e) => onChange({ ...data, role: e.target.value })}
-        placeholder="Rol / Especialidad *"
-        className="bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors"
+        placeholder="Puesto / Especialidad *"
+        className={inputCls}
       />
-      <input
-        value={data.photo}
-        onChange={(e) => onChange({ ...data, photo: e.target.value })}
-        placeholder="URL de foto"
-        className="bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors sm:col-span-2"
-      />
-      <input
-        value={data.linkedin}
-        onChange={(e) => onChange({ ...data, linkedin: e.target.value })}
-        placeholder="LinkedIn URL"
-        className="bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors sm:col-span-2"
-      />
-      {/* Preview */}
-      {data.photo && (
-        <div className="sm:col-span-2">
-          <p className="text-[10px] text-white/30 mb-1.5 uppercase tracking-wider">Preview</p>
-          <img src={data.photo} alt="preview" className="w-14 h-14 rounded-xl object-cover" />
-        </div>
-      )}
     </div>
   );
 }
