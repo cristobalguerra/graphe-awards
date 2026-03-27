@@ -25,6 +25,21 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className={`${geistSans.variable} antialiased`}>
+      <head>
+        {/* GitHub Pages SPA routing fix */}
+        <script dangerouslySetInnerHTML={{
+          __html: `
+            (function() {
+              var redirect = sessionStorage.redirect;
+              delete sessionStorage.redirect;
+              if (redirect && redirect !== location.href) {
+                var p = new URLSearchParams(location.search).get('p');
+                if (p) history.replaceState(null, null, p);
+              }
+            })();
+          `
+        }} />
+      </head>
       <body className="min-h-screen">
         <SmoothScroll>
           <AnimatedOrbs />
