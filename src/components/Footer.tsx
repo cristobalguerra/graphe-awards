@@ -45,6 +45,16 @@ export default function Footer() {
             <a href="#" className="hover:text-white/30 transition-colors">Términos y condiciones</a>
           </div>
         </div>
+
+        {/* Admin link — muy sutil */}
+        <div className="mt-8 flex justify-center">
+          <a
+            href="/admin"
+            className="text-[9px] text-white/8 hover:text-white/20 transition-colors tracking-widest uppercase"
+          >
+            ·
+          </a>
+        </div>
       </div>
     </footer>
   );
