@@ -70,16 +70,6 @@ export const CATEGORIES = [
       "https://images.unsplash.com/photo-1547658719-da2b51169166?w=200&auto=format&fit=crop&q=60",
     ],
   },
-  {
-    id: "agencia",
-    name: "Agencia del Año",
-    color: "#FFA400",
-    icon: "flower",
-    images: [
-      "https://images.unsplash.com/photo-1497366216548-37526070297c?w=200&auto=format&fit=crop&q=60",
-      "https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=200&auto=format&fit=crop&q=60",
-    ],
-  },
 ] as const;
 
 export type CategoryId = (typeof CATEGORIES)[number]["id"];
@@ -125,10 +115,6 @@ export const NOMINEES: Nominee[] = [
   { id: "d1", name: "Alejandro Duarte", project: "App Cultura UDEM", semester: "8vo", categoryId: "digital", image: "" },
   { id: "d2", name: "Nicole Sánchez", project: "Portal Interactivo", semester: "7mo", categoryId: "digital", image: "" },
   { id: "d3", name: "Mateo Ríos", project: "Dashboard Sostenible", semester: "6to", categoryId: "digital", image: "" },
-  // Agencia del Año
-  { id: "a1", name: "Estudio Ámbar", project: "Portafolio Integral", semester: "Agencia", categoryId: "agencia", image: "" },
-  { id: "a2", name: "Colectivo Grafito", project: "Campaña Social", semester: "Agencia", categoryId: "agencia", image: "" },
-  { id: "a3", name: "Taller Norte", project: "Identidad Regional", semester: "Agencia", categoryId: "agencia", image: "" },
 ];
 
 export const JURY_CRITERIA = [

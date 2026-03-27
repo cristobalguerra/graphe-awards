@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   getNominees,
   addNominee,
@@ -9,7 +9,9 @@ import {
   type NomineeDoc,
 } from "@/lib/firestore";
 import { CATEGORIES } from "@/lib/data";
-import { Plus, Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { storage } from "@/lib/firebase";
+import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 
 const NOMINEES_PER_CATEGORY = 3;
 
@@ -283,6 +285,72 @@ function SliderPreview({ images, color }: { images: { url: string }[]; color: st
   );
 }
 
+// ─── Image slot uploader ──────────────────────────────────────────────────────
+function ImageSlotUploader({
+  url,
+  label,
+  onUpload,
+  onRemove,
+}: {
+  url: string;
+  label: string;
+  onUpload: (url: string) => void;
+  onRemove: () => void;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const storageRef = ref(storage, `nominees/${Date.now()}-${file.name}`);
+      await uploadBytes(storageRef, file);
+      const downloadUrl = await getDownloadURL(storageRef);
+      onUpload(downloadUrl);
+    } catch (err) {
+      console.error(err);
+      alert("Error al subir imagen. Verifica Firebase Storage.");
+    }
+    setUploading(false);
+  }
+
+  return (
+    <div className="space-y-1">
+      <p className="text-[9px] text-white/25 uppercase tracking-widest">{label}</p>
+      {url ? (
+        <div className="relative group">
+          <div className="aspect-video rounded-lg overflow-hidden bg-black">
+            <img src={url} alt={label} className="w-full h-full object-cover" />
+          </div>
+          <button
+            type="button"
+            onClick={onRemove}
+            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/70 flex items-center justify-center text-white/60 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-all"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={() => inputRef.current?.click()}
+          disabled={uploading}
+          className="w-full aspect-video rounded-lg border border-dashed border-white/10 hover:border-white/25 flex flex-col items-center justify-center gap-1.5 text-white/20 hover:text-white/40 transition-all"
+        >
+          {uploading ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /><span className="text-[10px]">Subiendo...</span></>
+          ) : (
+            <><Upload className="w-4 h-4" /><span className="text-[10px]">Subir imagen</span></>
+          )}
+        </button>
+      )}
+      <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+    </div>
+  );
+}
+
 // ─── Nominee form ─────────────────────────────────────────────────────────────
 function NomineeForm({
   data,
@@ -302,33 +370,27 @@ function NomineeForm({
   const inputCls = "w-full bg-white/[0.05] border border-white/[0.08] rounded-lg px-3 py-2 text-xs text-white placeholder-white/20 focus:outline-none transition-colors";
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       <input value={data.name} onChange={(e) => onChange({ ...data, name: e.target.value })}
         placeholder="Nombre del estudiante *" className={inputCls}
         style={{ borderColor: data.name ? `${catColor}40` : undefined }} />
       <input value={data.project} onChange={(e) => onChange({ ...data, project: e.target.value })}
         placeholder="Nombre del proyecto *" className={inputCls} />
 
-      {/* 3 imágenes */}
-      <div className="space-y-1.5">
-        <p className="text-[9px] text-white/20 uppercase tracking-widest">Imágenes 16:9</p>
+      {/* 3 imágenes upload directo */}
+      <div className="space-y-2 pt-1">
+        <p className="text-[9px] text-white/20 uppercase tracking-widest">Imágenes del proyecto (16:9)</p>
         {[0, 1, 2].map((i) => (
-          <div key={i} className="flex items-center gap-2">
-            <span className="text-[9px] text-white/20 w-3">{i + 1}</span>
-            <input
-              value={data.images[i]?.url || ""}
-              onChange={(e) => updateImage(i, e.target.value)}
-              placeholder={`URL imagen ${i + 1}`}
-              className={inputCls}
-            />
-            {data.images[i]?.url && (
-              <div className="w-8 h-5 rounded overflow-hidden flex-shrink-0">
-                <img src={data.images[i].url} alt="" className="w-full h-full object-cover" />
-              </div>
-            )}
-          </div>
+          <ImageSlotUploader
+            key={i}
+            url={data.images[i]?.url || ""}
+            label={`Imagen ${i + 1} de 3`}
+            onUpload={(url) => updateImage(i, url)}
+            onRemove={() => updateImage(i, "")}
+          />
         ))}
       </div>
     </div>
   );
 }
+
