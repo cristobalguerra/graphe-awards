@@ -8,8 +8,7 @@ import {
   deleteJuryMember,
   type JuryMember,
 } from "@/lib/firestore";
-import { storage } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { uploadImage } from "@/lib/cloudinary";
 import { Plus, Trash2, Pencil, Check, X, UserCircle2, Upload, Loader2 } from "lucide-react";
 
 const EMPTY: Omit<JuryMember, "id"> = {
@@ -204,13 +203,11 @@ function PhotoUploader({
     if (!file) return;
     setUploading(true);
     try {
-      const storageRef = ref(storage, `jury/${Date.now()}-${file.name}`);
-      await uploadBytes(storageRef, file);
-      const url = await getDownloadURL(storageRef);
+      const url = await uploadImage(file);
       onChange(url);
     } catch (err) {
       console.error(err);
-      alert("Error al subir la foto. Verifica los permisos de Firebase Storage.");
+      alert("Error al subir la foto.");
     }
     setUploading(false);
   }

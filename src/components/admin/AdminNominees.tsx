@@ -10,8 +10,7 @@ import {
 } from "@/lib/firestore";
 import { CATEGORIES } from "@/lib/data";
 import { Plus, Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
-import { storage } from "@/lib/firebase";
-import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { uploadImage } from "@/lib/cloudinary";
 
 const NOMINEES_PER_CATEGORY = 3;
 
@@ -305,13 +304,11 @@ function ImageSlotUploader({
     if (!file) return;
     setUploading(true);
     try {
-      const storageRef = ref(storage, `nominees/${Date.now()}-${file.name}`);
-      await uploadBytes(storageRef, file);
-      const downloadUrl = await getDownloadURL(storageRef);
-      onUpload(downloadUrl);
+      const url = await uploadImage(file);
+      onUpload(url);
     } catch (err) {
       console.error(err);
-      alert("Error al subir imagen. Verifica Firebase Storage.");
+      alert("Error al subir imagen.");
     }
     setUploading(false);
   }
