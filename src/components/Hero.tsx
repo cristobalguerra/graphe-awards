@@ -42,7 +42,7 @@ export default function Hero({ onGetTicket }: { onGetTicket?: () => void }) {
         </div>
 
         {/* Content overlay */}
-        <div className="relative z-10 flex flex-col h-full justify-between px-6 sm:px-12 lg:px-20 pt-24 pb-12">
+        <div className="relative z-10 flex flex-col h-full justify-between px-6 sm:px-12 lg:px-20 pt-24 pb-72">
           {/* Top — logo */}
           <div
             className="transition-all duration-300"
@@ -54,7 +54,7 @@ export default function Hero({ onGetTicket }: { onGetTicket?: () => void }) {
             <img
               src={`${basePath}/logo-white.png`}
               alt="Graphē Awards"
-              className="w-[280px] sm:w-[400px] lg:w-[520px] h-auto"
+              className="w-[280px] sm:w-[400px] lg:w-[520px] h-auto -ml-3"
             />
           </div>
 

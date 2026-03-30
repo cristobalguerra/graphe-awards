@@ -17,12 +17,13 @@ export default function Navbar() {
     <>
       {/* Logo - fixed top left */}
       <div className="fixed top-5 left-6 sm:left-12 lg:left-20 z-50">
-        <a href="#" className="h-4 w-auto block">
+        <a href="#" className="flex items-center gap-1.5">
           <img
             src={`${basePath}/logo-graphe.svg`}
             alt="Graphē Awards"
-            className="h-4 w-auto object-contain"
+            className="h-4 w-auto object-contain opacity-25"
           />
+          <span className="text-white/25 text-[10px] tracking-wide">© 2026</span>
         </a>
       </div>
 

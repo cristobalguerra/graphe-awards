@@ -316,7 +316,7 @@ function TrophyModel({ scrollProgress }: { scrollProgress: number }) {
 
   return (
     <group ref={groupRef}>
-      <group scale={1.4} rotation={[-Math.PI / 2, 0, 0]}>
+      <group scale={1.4} position={[0, 0.2, 0]} rotation={[-Math.PI / 2 - 0.3, 0, 0]}>
         <primitive object={scene} />
       </group>
     </group>
@@ -342,7 +342,7 @@ export default function Trophy3D({
     <div className={`w-full h-full relative ${className}`}>
       <Suspense fallback={<FallbackLoader />}>
         <Canvas
-          camera={{ position: [0, 0.1, 2.4], fov: 40 }}
+          camera={{ position: [0, -0.5, 4.2], fov: 40 }}
           gl={{ antialias: true, alpha: true }}
           style={{ background: "transparent" }}
         >
