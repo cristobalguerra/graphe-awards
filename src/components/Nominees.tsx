@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createPortal } from "react-dom";
 import { subscribeNominees, type NomineeDoc } from "@/lib/firestore";
 import { CATEGORIES } from "@/lib/data";
 import CategoryIcon from "./CategoryIcon";
@@ -8,13 +9,14 @@ import { useScrollReveal } from "@/lib/useScrollReveal";
 import TextReveal from "./TextReveal";
 import StaggerGrid from "./StaggerGrid";
 import TiltCard from "./TiltCard";
-import { ChevronLeft, ChevronRight, Image } from "lucide-react";
+import { ChevronLeft, ChevronRight, Image, X, ZoomIn } from "lucide-react";
 
 export default function Nominees() {
   const ref = useScrollReveal();
   const [nominees, setNominees] = useState<NomineeDoc[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [selectedCat, setSelectedCat] = useState<string>("all");
+  const [lightbox, setLightbox] = useState<{ url: string; caption?: string } | null>(null);
 
   useEffect(() => {
     const unsub = subscribeNominees((data) => {
@@ -28,6 +30,7 @@ export default function Nominees() {
   const filtered = selectedCat === "all" ? nominees : nominees.filter((n) => n.categoryId === selectedCat);
 
   return (
+    <>
     <section id="nominados" className="py-14 sm:py-24 relative overflow-hidden" ref={ref}>
       <div className="max-w-7xl mx-auto px-6 sm:px-12 lg:px-20 mb-6 sm:mb-10">
         <div className="line-reveal h-px bg-gradient-to-r from-[#FFB3AB]/30 via-[#FFB3AB]/10 to-transparent" />
@@ -95,7 +98,7 @@ export default function Nominees() {
                     style={{ backgroundColor: "#111110" }}
                   >
                     {/* Image slider 16:9 */}
-                    <NomineeSlider images={n.images} color={cat?.color || "#fff"} />
+                    <NomineeSlider images={n.images} color={cat?.color || "#fff"} onOpenLightbox={setLightbox} />
                     {/* Info */}
                     <div className="p-4">
                       <div className="flex items-center gap-2 mb-2">
@@ -144,12 +147,40 @@ export default function Nominees() {
           </StaggerGrid>
         )}
       </div>
+
     </section>
+
+    {/* Lightbox — portal to body to escape overflow:hidden */}
+    {lightbox && typeof document !== "undefined" && createPortal(
+
+      <div
+        className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-sm p-4"
+        onClick={() => setLightbox(null)}
+      >
+        <button
+          className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+          onClick={() => setLightbox(null)}
+        >
+          <X className="w-5 h-5 text-white" />
+        </button>
+        <img
+          src={lightbox.url}
+          alt={lightbox.caption || ""}
+          className="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+        />
+        {lightbox.caption && (
+          <p className="absolute bottom-6 text-white/50 text-xs tracking-wide">{lightbox.caption}</p>
+        )}
+      </div>,
+      document.body
+    )}
+    </>
   );
 }
 
 // ─── Nominee Image Slider 16:9 ────────────────────────────────────────────────
-function NomineeSlider({ images, color }: { images: { url: string; caption?: string }[]; color: string }) {
+function NomineeSlider({ images, color, onOpenLightbox }: { images: { url: string; caption?: string }[]; color: string; onOpenLightbox: (img: { url: string; caption?: string }) => void }) {
   const [idx, setIdx] = useState(0);
   const valid = images?.filter((img) => img.url) || [];
 
@@ -166,8 +197,13 @@ function NomineeSlider({ images, color }: { images: { url: string; caption?: str
       <img
         src={valid[idx].url}
         alt={valid[idx].caption || `Imagen ${idx + 1}`}
-        className="w-full h-full object-cover transition-opacity duration-300"
+        className="w-full h-full object-cover transition-opacity duration-300 cursor-zoom-in"
+        onClick={() => onOpenLightbox(valid[idx])}
       />
+      {/* Zoom hint */}
+      <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <ZoomIn className="w-3.5 h-3.5 text-white/70" />
+      </div>
       {/* Gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent" />
 

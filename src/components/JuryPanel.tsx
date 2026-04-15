@@ -59,7 +59,7 @@ export default function JuryPanel() {
           {slots.map((m) => (
             <div key={m.id} className="flex flex-col items-center text-center group">
               {/* Photo or placeholder */}
-              <div className="w-28 h-28 sm:w-32 sm:h-32 rounded-full overflow-hidden mb-4 flex-shrink-0">
+              <div className="w-44 h-44 sm:w-48 sm:h-48 rounded-full overflow-hidden mb-4 flex-shrink-0">
                 {m.photo ? (
                   <img src={m.photo} alt={m.name} className="w-full h-full object-cover" />
                 ) : (
