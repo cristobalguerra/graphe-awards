@@ -6,7 +6,7 @@ import { CATEGORIES } from "@/lib/data";
 import { basePath } from "@/lib/basePath";
 import { Check, Plus, X, ChevronDown, AlertCircle } from "lucide-react";
 
-const DEADLINE = new Date("2026-04-18T23:59:00");
+const DEADLINE = new Date("2026-04-17T23:59:00");
 
 const CRITERIA: { key: keyof NomineeJustifications; label: string; description: string; color: string }[] = [
   { key: "concepto", label: "Concepto", description: "Explica la originalidad y claridad de la idea central de tu proyecto.", color: "#FFB3AB" },
@@ -156,7 +156,7 @@ export default function JustificarPage() {
             <div className="flex items-center gap-3 rounded-xl px-4 py-3 mb-8 border" style={{ backgroundColor: "#FFB3AB08", borderColor: "#FFB3AB20" }}>
               <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: "#FFB3AB" }} />
               <p className="text-xs" style={{ color: "#FFB3AB99" }}>
-                Fecha límite: <span style={{ color: "#FFB3AB" }}>viernes 18 de abril</span>
+                Fecha límite: <span style={{ color: "#FFB3AB" }}>viernes 17 de abril</span>
                 {daysLeft > 0 && ` · ${daysLeft} día${daysLeft !== 1 ? "s" : ""} restante${daysLeft !== 1 ? "s" : ""}`}
               </p>
             </div>
@@ -298,7 +298,7 @@ export default function JustificarPage() {
             <div className="mt-5 flex items-center gap-2 px-4 py-2 rounded-full border" style={{ backgroundColor: "#FFB3AB08", borderColor: "#FFB3AB25" }}>
               <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#FFB3AB" }} />
               <span className="text-xs" style={{ color: "#FFB3AB99" }}>
-                Fecha límite: <span style={{ color: "#FFB3AB" }}>viernes 18 de abril</span>
+                Fecha límite: <span style={{ color: "#FFB3AB" }}>viernes 17 de abril</span>
                 {daysLeft > 0 && ` · ${daysLeft} día${daysLeft !== 1 ? "s" : ""}`}
               </span>
             </div>
