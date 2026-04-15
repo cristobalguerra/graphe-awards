@@ -28,6 +28,13 @@ export interface NomineeImage {
   caption?: string;
 }
 
+export interface NomineeJustifications {
+  concepto?: string;
+  ejecucion?: string;
+  innovacion?: string;
+  impacto?: string;
+}
+
 export interface NomineeDoc {
   id?: string;
   name: string;
@@ -37,6 +44,9 @@ export interface NomineeDoc {
   images: NomineeImage[]; // 3 images 16:9
   description?: string;
   order: number;
+  members?: string[];           // All team member names
+  justifications?: NomineeJustifications;
+  justifiedAt?: import("firebase/firestore").Timestamp | null;
 }
 
 // ─── Jury ────────────────────────────────────────────────────────────────────
@@ -91,4 +101,17 @@ export async function updateNominee(id: string, data: Partial<NomineeDoc>) {
 
 export async function deleteNominee(id: string) {
   return deleteDoc(doc(db, "nominees", id));
+}
+
+export async function submitJustification(
+  id: string,
+  members: string[],
+  justifications: NomineeJustifications
+) {
+  const { Timestamp } = await import("firebase/firestore");
+  return updateDoc(doc(db, "nominees", id), {
+    members,
+    justifications,
+    justifiedAt: Timestamp.now(),
+  });
 }

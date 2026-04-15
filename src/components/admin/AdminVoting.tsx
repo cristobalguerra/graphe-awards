@@ -13,7 +13,7 @@ import {
 } from "@/lib/voting";
 import { subscribeNominees, type NomineeDoc } from "@/lib/firestore";
 import { CATEGORIES } from "@/lib/data";
-import { Plus, Trash2, RefreshCw, Copy, Check, Trophy, Users } from "lucide-react";
+import { Plus, Trash2, RefreshCw, Copy, Check, Trophy, Users, FileText } from "lucide-react";
 
 function generatePin(): string {
   return String(Math.floor(1000 + Math.random() * 9000));
@@ -23,7 +23,7 @@ export default function AdminVoting() {
   const [jurors, setJurors] = useState<JuryAccess[]>([]);
   const [votes, setVotes] = useState<Vote[]>([]);
   const [nominees, setNominees] = useState<NomineeDoc[]>([]);
-  const [tab, setTab] = useState<"jurors" | "results">("jurors");
+  const [tab, setTab] = useState<"jurors" | "results" | "justifications">("jurors");
   const [newName, setNewName] = useState("");
   const [adding, setAdding] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
@@ -85,6 +85,13 @@ export default function AdminVoting() {
         >
           <Trophy className="w-3.5 h-3.5" />
           Resultados
+        </button>
+        <button
+          onClick={() => setTab("justifications")}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${tab === "justifications" ? "bg-white/10 text-white" : "text-white/30 hover:text-white/60"}`}
+        >
+          <FileText className="w-3.5 h-3.5" />
+          Justificaciones ({nominees.filter((n) => !!n.justifiedAt).length}/{nominees.length})
         </button>
         <div className="ml-auto text-xs text-white/30">
           {votedCount}/{jurors.length} jueces han votado
@@ -279,6 +286,72 @@ export default function AdminVoting() {
               })}
             </>
           )}
+        </div>
+      )}
+
+      {/* ── Justifications tab ── */}
+      {tab === "justifications" && (
+        <div>
+          {nominees.length === 0 ? (
+            <div className="text-center py-16 text-white/20 text-sm">No hay nominados cargados.</div>
+          ) : (
+            <div className="space-y-2">
+              {nominees.map((n) => {
+                const cat = CATEGORIES.find((c) => c.id === n.categoryId);
+                const hasJust = !!n.justifiedAt;
+                const criteriaKeys = ["concepto", "ejecucion", "innovacion", "impacto"] as const;
+                return (
+                  <details key={n.id} className="rounded-xl border overflow-hidden group" style={{ backgroundColor: "#111110", borderColor: hasJust ? `${cat?.color}30` : "rgba(255,255,255,0.06)" }}>
+                    <summary className="flex items-center gap-3 px-4 py-3 cursor-pointer list-none">
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hasJust ? "#00C97A" : "rgba(255,255,255,0.15)" }} />
+                      <div className="flex-1 min-w-0">
+                        <span className="text-sm font-medium text-white">{n.name}</span>
+                        <span className="text-white/30 mx-2">·</span>
+                        <span className="text-xs italic text-white/40">"{n.project}"</span>
+                        {n.members && n.members.length > 1 && (
+                          <p className="text-[10px] text-white/25 mt-0.5">{n.members.join(", ")}</p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <span className="text-[10px] font-medium px-2 py-0.5 rounded-full" style={{ backgroundColor: `${cat?.color}15`, color: cat?.color }}>{cat?.name}</span>
+                        {hasJust ? (
+                          <span className="text-[10px] text-green-400 font-medium">✓ Enviado</span>
+                        ) : (
+                          <span className="text-[10px] text-white/20">Pendiente</span>
+                        )}
+                      </div>
+                    </summary>
+                    {hasJust && n.justifications && (
+                      <div className="px-4 pb-4 border-t border-white/[0.05] pt-3 grid sm:grid-cols-2 gap-4">
+                        {criteriaKeys.map((key) => {
+                          const text = n.justifications?.[key];
+                          if (!text) return null;
+                          const labels: Record<string, string> = { concepto: "Concepto", ejecucion: "Ejecución", innovacion: "Innovación", impacto: "Impacto" };
+                          return (
+                            <div key={key}>
+                              <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: cat?.color }}>{labels[key]}</p>
+                              <p className="text-xs text-white/40 leading-relaxed">{text}</p>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                    {!hasJust && (
+                      <div className="px-4 pb-3 border-t border-white/[0.05] pt-3">
+                        <p className="text-xs text-white/20 italic">Aún no ha enviado su justificación.</p>
+                      </div>
+                    )}
+                  </details>
+                );
+              })}
+            </div>
+          )}
+          <div className="mt-6 rounded-xl border border-white/[0.06] p-4 bg-white/[0.02]">
+            <p className="text-xs text-white/40 mb-1">Enlace para que los alumnos justifiquen sus proyectos</p>
+            <p className="text-sm font-mono text-white/60">
+              {typeof window !== "undefined" ? window.location.origin : ""}/justificar
+            </p>
+          </div>
         </div>
       )}
     </div>

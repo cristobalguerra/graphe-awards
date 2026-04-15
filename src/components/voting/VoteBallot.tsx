@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { subscribeNominees, type NomineeDoc } from "@/lib/firestore";
-import { submitVotes, getVotesByJuror, type JuryAccess, type VoteScores } from "@/lib/voting";
+import { submitVotes, type JuryAccess, type VoteScores } from "@/lib/voting";
 import { CATEGORIES } from "@/lib/data";
-import { ChevronRight, ChevronLeft, Check, Star } from "lucide-react";
+import { ChevronRight, ChevronLeft, Check, ChevronDown } from "lucide-react";
 import { basePath } from "@/lib/basePath";
 
 interface Props {
@@ -18,8 +18,117 @@ const CRITERIA: { key: keyof VoteScores; label: string; description: string }[] 
   { key: "impacto", label: "Impacto", description: "Relevancia comunicativa" },
 ];
 
-type ScoreMap = Record<string, VoteScores>; // nomineeId → scores
+type ScoreMap = Record<string, VoteScores>;
 
+// ─── Nominee Card ─────────────────────────────────────────────────────────────
+function NomineeCard({
+  n, cat, s, allScored, onScore,
+}: {
+  n: NomineeDoc;
+  cat: (typeof CATEGORIES)[number];
+  s: Partial<VoteScores>;
+  allScored: boolean;
+  onScore: (key: keyof VoteScores, val: number) => void;
+}) {
+  const [justOpen, setJustOpen] = useState(false);
+  const hasJustifications = n.justifications && Object.values(n.justifications).some((v) => v && v.length > 0);
+
+  return (
+    <div
+      className="rounded-2xl border transition-all overflow-hidden"
+      style={{ backgroundColor: "#111110", borderColor: allScored ? `${cat.color}40` : "rgba(255,255,255,0.06)" }}
+    >
+      {/* Nominee info */}
+      <div className="flex items-start gap-4 p-5 pb-4">
+        {n.images?.[0]?.url ? (
+          <img src={n.images[0].url} alt={n.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+        ) : (
+          <div className="w-16 h-16 rounded-xl flex-shrink-0 bg-white/[0.04]" />
+        )}
+        <div className="min-w-0 flex-1">
+          <p className="text-xs font-medium mb-0.5" style={{ color: cat.color }}>{cat.name}</p>
+          <h3 className="text-base font-bold text-white">{n.name}</h3>
+          {/* Team members */}
+          {n.members && n.members.length > 1 ? (
+            <p className="text-xs text-white/40 mt-0.5">{n.members.join(", ")}</p>
+          ) : (
+            <p className="text-xs text-white/40 italic">"{n.project}"</p>
+          )}
+          {n.members && n.members.length > 1 && (
+            <p className="text-xs text-white/30 italic mt-0.5">"{n.project}"</p>
+          )}
+        </div>
+        {allScored && (
+          <div className="ml-auto flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: `${cat.color}20` }}>
+            <Check className="w-3.5 h-3.5" style={{ color: cat.color }} />
+          </div>
+        )}
+      </div>
+
+      {/* Justifications accordion */}
+      {hasJustifications && (
+        <div className="mx-5 mb-4 rounded-xl overflow-hidden border border-white/[0.06]">
+          <button
+            onClick={() => setJustOpen((o) => !o)}
+            className="w-full flex items-center justify-between px-4 py-3 text-left transition-colors hover:bg-white/[0.02]"
+          >
+            <span className="text-xs font-medium text-white/50">Ver justificación del equipo</span>
+            <ChevronDown className="w-3.5 h-3.5 text-white/30 transition-transform flex-shrink-0" style={{ transform: justOpen ? "rotate(180deg)" : "rotate(0)" }} />
+          </button>
+          {justOpen && (
+            <div className="px-4 pb-4 space-y-3 border-t border-white/[0.05]">
+              {CRITERIA.map((cr) => {
+                const text = n.justifications?.[cr.key];
+                if (!text) return null;
+                return (
+                  <div key={cr.key} className="pt-3">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider mb-1" style={{ color: cat.color }}>{cr.label}</p>
+                    <p className="text-xs text-white/50 leading-relaxed">{text}</p>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Score criteria */}
+      <div className="px-5 pb-5 grid grid-cols-2 gap-x-6 gap-y-4">
+        {CRITERIA.map((cr) => (
+          <div key={cr.key}>
+            <div className="flex items-center justify-between mb-1.5">
+              <div>
+                <p className="text-xs font-semibold text-white/70">{cr.label}</p>
+                <p className="text-[10px] text-white/25">{cr.description}</p>
+              </div>
+              {(s[cr.key] ?? 0) > 0 && (
+                <span className="text-xs font-bold" style={{ color: cat.color }}>{s[cr.key]}/5</span>
+              )}
+            </div>
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((v) => (
+                <button
+                  key={v}
+                  onClick={() => onScore(cr.key, v)}
+                  className="flex-1 h-7 rounded-lg transition-all flex items-center justify-center text-xs font-bold"
+                  style={{
+                    backgroundColor: (s[cr.key] ?? 0) >= v ? `${cat.color}30` : "rgba(255,255,255,0.04)",
+                    color: (s[cr.key] ?? 0) >= v ? cat.color : "rgba(255,255,255,0.2)",
+                    border: (s[cr.key] ?? 0) === v ? `1px solid ${cat.color}80` : "1px solid transparent",
+                  }}
+                >
+                  {v}
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Ballot ──────────────────────────────────────────────────────────────
 export default function VoteBallot({ juror }: Props) {
   const [nominees, setNominees] = useState<NomineeDoc[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -38,7 +147,6 @@ export default function VoteBallot({ juror }: Props) {
     return () => unsub();
   }, []);
 
-  // Pre-load existing votes if juror already voted (for display only — already locked)
   useEffect(() => {
     if (juror.hasVoted) setDone(true);
   }, [juror]);
@@ -46,20 +154,12 @@ export default function VoteBallot({ juror }: Props) {
   function setScore(nomineeId: string, key: keyof VoteScores, value: number) {
     setScores((prev) => {
       const existing = prev[nomineeId] ?? { concepto: 3, ejecucion: 3, innovacion: 3, impacto: 3 };
-      return {
-        ...prev,
-        [nomineeId]: { ...existing, [key]: value },
-      };
+      return { ...prev, [nomineeId]: { ...existing, [key]: value } };
     });
   }
 
-  function currentCat() {
-    return activeCats[catIndex];
-  }
-
-  function nomineesInCat(catId: string) {
-    return nominees.filter((n) => n.categoryId === catId);
-  }
+  function currentCat() { return activeCats[catIndex]; }
+  function nomineesInCat(catId: string) { return nominees.filter((n) => n.categoryId === catId); }
 
   function isCatComplete(catId: string) {
     return nomineesInCat(catId).every((n) => {
@@ -80,7 +180,7 @@ export default function VoteBallot({ juror }: Props) {
       });
       await submitVotes(juror.id!, voteList);
       setDone(true);
-    } catch (e) {
+    } catch {
       alert("Error al enviar votos. Intenta de nuevo.");
     } finally {
       setSubmitting(false);
@@ -131,7 +231,6 @@ export default function VoteBallot({ juror }: Props) {
             <span className="text-white/20">·</span>
             <span className="text-white/40 text-xs">Bienvenido, <span className="text-white/70">{juror.name}</span></span>
           </div>
-          {/* Progress dots */}
           <div className="flex items-center gap-1.5">
             {activeCats.map((c, i) => (
               <button
@@ -139,11 +238,7 @@ export default function VoteBallot({ juror }: Props) {
                 onClick={() => setCatIndex(i)}
                 className="w-2 h-2 rounded-full transition-all"
                 style={{
-                  backgroundColor: isCatComplete(c.id)
-                    ? c.color
-                    : i === catIndex
-                    ? "rgba(255,255,255,0.5)"
-                    : "rgba(255,255,255,0.1)",
+                  backgroundColor: isCatComplete(c.id) ? c.color : i === catIndex ? "rgba(255,255,255,0.5)" : "rgba(255,255,255,0.1)",
                   transform: i === catIndex ? "scale(1.3)" : "scale(1)",
                 }}
               />
@@ -168,64 +263,14 @@ export default function VoteBallot({ juror }: Props) {
             const s = scores[n.id ?? ""] ?? {};
             const allScored = CRITERIA.every((c) => (s[c.key] ?? 0) >= 1);
             return (
-              <div
+              <NomineeCard
                 key={n.id}
-                className="rounded-2xl border transition-all overflow-hidden"
-                style={{ backgroundColor: "#111110", borderColor: allScored ? `${cat.color}40` : "rgba(255,255,255,0.06)" }}
-              >
-                {/* Nominee info */}
-                <div className="flex items-start gap-4 p-5 pb-4">
-                  {n.images?.[0]?.url ? (
-                    <img src={n.images[0].url} alt={n.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
-                  ) : (
-                    <div className="w-16 h-16 rounded-xl flex-shrink-0 bg-white/[0.04]" />
-                  )}
-                  <div className="min-w-0">
-                    <p className="text-xs font-medium mb-0.5 truncate" style={{ color: cat.color }}>{cat.name}</p>
-                    <h3 className="text-base font-bold text-white truncate">{n.name}</h3>
-                    <p className="text-sm text-white/40 italic truncate">"{n.project}"</p>
-                    {n.description && <p className="text-xs text-white/20 mt-1 line-clamp-1">{n.description}</p>}
-                  </div>
-                  {allScored && (
-                    <div className="ml-auto flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: `${cat.color}20` }}>
-                      <Check className="w-3.5 h-3.5" style={{ color: cat.color }} />
-                    </div>
-                  )}
-                </div>
-
-                {/* Score criteria */}
-                <div className="px-5 pb-5 grid grid-cols-2 gap-x-6 gap-y-4">
-                  {CRITERIA.map((cr) => (
-                    <div key={cr.key}>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <div>
-                          <p className="text-xs font-semibold text-white/70">{cr.label}</p>
-                          <p className="text-[10px] text-white/25">{cr.description}</p>
-                        </div>
-                        {(s[cr.key] ?? 0) > 0 && (
-                          <span className="text-xs font-bold" style={{ color: cat.color }}>{s[cr.key]}/5</span>
-                        )}
-                      </div>
-                      <div className="flex gap-1">
-                        {[1, 2, 3, 4, 5].map((v) => (
-                          <button
-                            key={v}
-                            onClick={() => setScore(n.id ?? "", cr.key, v)}
-                            className="flex-1 h-7 rounded-lg transition-all flex items-center justify-center text-xs font-bold"
-                            style={{
-                              backgroundColor: (s[cr.key] ?? 0) >= v ? `${cat.color}30` : "rgba(255,255,255,0.04)",
-                              color: (s[cr.key] ?? 0) >= v ? cat.color : "rgba(255,255,255,0.2)",
-                              border: (s[cr.key] ?? 0) === v ? `1px solid ${cat.color}80` : "1px solid transparent",
-                            }}
-                          >
-                            {v}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                n={n}
+                cat={cat}
+                s={s}
+                allScored={allScored}
+                onScore={(key, val) => setScore(n.id ?? "", key, val)}
+              />
             );
           })}
         </div>
