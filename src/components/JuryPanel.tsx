@@ -53,30 +53,30 @@ export default function JuryPanel() {
         </div>
 
         <StaggerGrid
-          className={`grid gap-3 sm:gap-4 ${slots.length <= 3 ? "sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6"}`}
+          className={`grid gap-x-3 gap-y-8 sm:gap-6 ${slots.length <= 3 ? "grid-cols-3" : "grid-cols-3 lg:grid-cols-6"}`}
           columns={Math.min(slots.length, 6)}
         >
           {slots.map((m) => (
-            <div key={m.id} className="flex flex-col items-center text-center group">
-              {/* Photo or placeholder */}
-              <div className="w-44 h-44 sm:w-48 sm:h-48 rounded-full overflow-hidden mb-4 flex-shrink-0">
+            <div key={m.id} className="flex flex-col items-center text-center group min-w-0">
+              {/* Photo */}
+              <div className="w-full aspect-square max-w-[80px] sm:max-w-[110px] lg:max-w-[140px] rounded-full overflow-hidden mb-3 flex-shrink-0 mx-auto">
                 {m.photo ? (
                   <img src={m.photo} alt={m.name} className="w-full h-full object-cover" />
                 ) : (
                   <div
-                    className="w-full h-full flex items-center justify-center opacity-20 group-hover:opacity-40 transition-opacity duration-500 rounded-full"
-                    style={{ backgroundColor: "rgba(255,179,171,0.1)" }}
+                    className="w-full h-full flex items-center justify-center rounded-full border border-white/[0.06]"
+                    style={{ backgroundColor: "rgba(255,179,171,0.04)" }}
                   >
                     {isPlaceholder ? (
-                      <span className="text-2xl font-black" style={{ color: "#FFB3AB" }}>?</span>
+                      <span className="text-lg font-black text-white/20">?</span>
                     ) : (
-                      <UserCircle2 className="w-10 h-10 text-[#FFB3AB]" />
+                      <UserCircle2 className="w-8 h-8 text-white/20" />
                     )}
                   </div>
                 )}
               </div>
-              <h3 className="text-xs font-semibold text-white/70 mb-1">{m.name}</h3>
-              <p className="text-[10px] text-white/30 tracking-wider uppercase">{m.role}</p>
+              <h3 className="text-[10px] sm:text-xs font-semibold text-white/60 mb-0.5 leading-tight px-1">{m.name}</h3>
+              <p className="text-[9px] text-white/25 tracking-wider uppercase">{m.role}</p>
               {(m as JuryMember).linkedin && (
                 <a
                   href={(m as JuryMember).linkedin}

@@ -5,8 +5,7 @@
       "name": "graphe-awards",
       "runtimeExecutable": "npm",
       "runtimeArgs": ["run", "dev"],
-      "port": 3007,
-      "autoPort": false
+      "port": 3007
     }
   ]
 }

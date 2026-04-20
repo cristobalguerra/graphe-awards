@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { LogOut, Users, Award, LayoutGrid, Vote } from "lucide-react";
+import { LogOut, Users, Award, LayoutGrid, Vote, Camera } from "lucide-react";
 import AdminJury from "./AdminJury";
 import AdminNominees from "./AdminNominees";
 import AdminVoting from "./AdminVoting";
+import AdminPhotos from "./AdminPhotos";
 
-type Tab = "jurado" | "nominados" | "votaciones";
+type Tab = "jurado" | "nominados" | "votaciones" | "fotos";
 
 interface Props {
   onLogout: () => void;
@@ -62,6 +63,17 @@ export default function AdminPanel({ onLogout }: Props) {
                 <Vote className="w-3.5 h-3.5" />
                 Votaciones
               </button>
+              <button
+                onClick={() => setTab("fotos")}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                  tab === "fotos"
+                    ? "bg-white/10 text-white"
+                    : "text-white/30 hover:text-white/60"
+                }`}
+              >
+                <Camera className="w-3.5 h-3.5" />
+                Fotos
+              </button>
             </nav>
           </div>
           <button
@@ -79,6 +91,7 @@ export default function AdminPanel({ onLogout }: Props) {
         {tab === "jurado" && <AdminJury />}
         {tab === "nominados" && <AdminNominees />}
         {tab === "votaciones" && <AdminVoting />}
+        {tab === "fotos" && <AdminPhotos />}
       </div>
     </div>
   );
