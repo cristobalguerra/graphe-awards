@@ -180,13 +180,11 @@ export default function JustificarPage() {
                     value={m}
                     onChange={(e) => updateMember(i, e.target.value)}
                     placeholder={`Integrante ${i + 1}`}
-                    disabled={isPastDeadline}
                     className="flex-1 bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-2.5 text-white text-sm placeholder-white/20 focus:outline-none focus:border-white/20 transition-colors disabled:opacity-40"
                   />
                   {members.length > 1 && (
                     <button
                       onClick={() => removeMember(i)}
-                      disabled={isPastDeadline}
                       className="w-9 h-9 rounded-xl bg-white/[0.05] hover:bg-red-500/20 flex items-center justify-center transition-colors disabled:opacity-40"
                     >
                       <X className="w-3.5 h-3.5 text-white/40" />
@@ -195,15 +193,13 @@ export default function JustificarPage() {
                 </div>
               ))}
             </div>
-            {!isPastDeadline && (
-              <button
-                onClick={addMember}
-                className="mt-2 flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 transition-colors"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Agregar integrante
-              </button>
-            )}
+            <button
+              onClick={addMember}
+              className="mt-2 flex items-center gap-1.5 text-xs text-white/30 hover:text-white/60 transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Agregar integrante
+            </button>
           </div>
 
           {/* Justifications */}
@@ -238,7 +234,6 @@ export default function JustificarPage() {
                         <textarea
                           value={val}
                           onChange={(e) => setJustifications((j) => ({ ...j, [cr.key]: e.target.value }))}
-                          disabled={isPastDeadline}
                           placeholder="Escribe tu justificación aquí..."
                           rows={4}
                           className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-4 py-3 text-white text-sm placeholder-white/15 focus:outline-none focus:border-white/20 transition-colors resize-none leading-relaxed disabled:opacity-40"
@@ -254,17 +249,15 @@ export default function JustificarPage() {
 
           {/* Submit */}
           {error && <p className="text-red-400 text-xs mb-4 text-center">{error}</p>}
-          {!isPastDeadline && (
-            <button
-              onClick={handleSubmit}
-              disabled={!canSubmit || submitting}
-              className="w-full py-4 rounded-2xl font-bold text-sm tracking-wide transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-              style={{ backgroundColor: "#FFB3AB", color: "#0a0a09" }}
-            >
-              {submitting ? "Guardando..." : "Enviar justificación"}
-            </button>
-          )}
-          {!canSubmit && !isPastDeadline && (
+          <button
+            onClick={handleSubmit}
+            disabled={!canSubmit || submitting}
+            className="w-full py-4 rounded-2xl font-bold text-sm tracking-wide transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            style={{ backgroundColor: "#FFB3AB", color: "#0a0a09" }}
+          >
+            {submitting ? "Guardando..." : "Enviar justificación"}
+          </button>
+          {!canSubmit && (
             <p className="text-center text-xs text-white/20 mt-3">
               {validMembers.length === 0 ? "Agrega al menos un integrante" : "Completa todas las justificaciones (mínimo 20 caracteres cada una)"}
             </p>
