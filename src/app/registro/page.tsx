@@ -151,12 +151,6 @@ export default function RegistroPage() {
             Regístrate para la ceremonia del <strong className="text-white/60">29 de abril</strong> y participa automáticamente en la rifa del <strong className="text-white/60">kit oficial</strong>.
           </p>
 
-          {totalRegistered > 0 && (
-            <div className="mt-6 flex items-center gap-2 text-xs text-white/40">
-              <div className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ backgroundColor: "#FFB3AB" }} />
-              <span><strong className="text-white/70">{totalRegistered}</strong> {totalRegistered === 1 ? "persona ya apartó" : "personas ya apartaron"} su lugar</span>
-            </div>
-          )}
         </div>
 
         {/* Name */}
