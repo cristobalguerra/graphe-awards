@@ -93,11 +93,11 @@ export default function RegistroPage() {
                 <p className="text-xs text-white/40">5:00 PM</p>
               </div>
             </div>
-            <div className="flex items-center gap-2.5">
-              <MapPin className="w-4 h-4 flex-shrink-0" style={{ color: "#FFB3AB" }} />
+            <div className="flex items-start gap-2.5">
+              <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" style={{ color: "#FFB3AB" }} />
               <div>
-                <p className="text-sm font-bold text-white">Universidad de Monterrey</p>
-                <p className="text-xs text-white/40">Por confirmar el salón exacto</p>
+                <p className="text-sm font-bold text-white">Aula Crítica · 5to piso, CRGS</p>
+                <p className="text-xs text-white/40">Centro Roberto Garza Sada · UDEM</p>
               </div>
             </div>
           </div>
@@ -107,7 +107,7 @@ export default function RegistroPage() {
             <div className="flex items-start gap-3">
               <Gift className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: "#FFB3AB" }} />
               <div className="text-left">
-                <p className="text-sm font-bold mb-1" style={{ color: "#FFB3AB" }}>Estás en la rifa del kit Graphē</p>
+                <p className="text-sm font-bold mb-1" style={{ color: "#FFB3AB" }}>Estás en la rifa del kit oficial</p>
                 <p className="text-xs leading-relaxed" style={{ color: "rgba(255,179,171,0.7)" }}>
                   Si ganas te avisamos el <strong style={{ color: "#FFB3AB" }}>miércoles 29 por la mañana</strong> al correo <span className="font-semibold">{email}</span>. Pasarás por tu kit antes de la ceremonia.
                 </p>
@@ -148,7 +148,7 @@ export default function RegistroPage() {
             <span style={{ color: "#FFB3AB" }}>Gana un kit Graphē.</span>
           </h1>
           <p className="text-white/30 text-sm mt-4 leading-relaxed max-w-sm">
-            Regístrate para la ceremonia del <strong className="text-white/60">29 de abril</strong> y participa automáticamente en la rifa de <strong className="text-white/60">5 kits oficiales</strong>.
+            Regístrate para la ceremonia del <strong className="text-white/60">29 de abril</strong> y participa automáticamente en la rifa del <strong className="text-white/60">kit oficial</strong>.
           </p>
 
           {totalRegistered > 0 && (
@@ -257,7 +257,7 @@ export default function RegistroPage() {
         <div className="rounded-2xl p-4 mb-6 border flex items-start gap-3" style={{ backgroundColor: "rgba(255,179,171,0.04)", borderColor: "rgba(255,179,171,0.15)" }}>
           <Gift className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: "#FFB3AB" }} />
           <div>
-            <p className="text-sm font-bold mb-1" style={{ color: "#FFB3AB" }}>Rifamos {TOTAL_KITS} kits oficiales Graphē</p>
+            <p className="text-sm font-bold mb-1" style={{ color: "#FFB3AB" }}>Rifamos el kit oficial Graphē</p>
             <p className="text-xs leading-relaxed" style={{ color: "rgba(255,179,171,0.7)" }}>
               A los ganadores les avisamos el <strong style={{ color: "#FFB3AB" }}>miércoles 29 por la mañana</strong> para que pasen por su kit antes de la ceremonia.
             </p>
