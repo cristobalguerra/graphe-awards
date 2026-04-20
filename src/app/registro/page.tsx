@@ -277,7 +277,7 @@ export default function RegistroPage() {
         </button>
 
         <p className="text-center text-[10px] text-white/20 mt-4">
-          Al registrarte aceptas recibir un correo de confirmación.
+          Guarda tu correo: ahí te avisaremos si ganas el kit.
         </p>
       </form>
     </div>
