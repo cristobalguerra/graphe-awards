@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { subscribeNominees, type NomineeDoc } from "@/lib/firestore";
 import { submitVotes, type JuryAccess, type VoteScores } from "@/lib/voting";
 import { CATEGORIES } from "@/lib/data";
-import { ChevronRight, ChevronLeft, Check, ChevronDown } from "lucide-react";
+import { ChevronRight, ChevronLeft, Check, ChevronDown, X } from "lucide-react";
 import { basePath } from "@/lib/basePath";
 
 interface Props {
@@ -31,17 +31,46 @@ function NomineeCard({
   onScore: (key: keyof VoteScores, val: number) => void;
 }) {
   const [justOpen, setJustOpen] = useState(false);
+  const [lightbox, setLightbox] = useState(false);
   const hasJustifications = n.justifications && Object.values(n.justifications).some((v) => v && v.length > 0);
+  const imgUrl = n.images?.[0]?.url;
 
   return (
+    <>
+      {/* Lightbox */}
+      {lightbox && imgUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          onClick={() => setLightbox(false)}
+        >
+          <img
+            src={imgUrl}
+            alt={n.project}
+            className="max-w-full max-h-full rounded-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={() => setLightbox(false)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+          >
+            <X className="w-5 h-5 text-white" />
+          </button>
+        </div>
+      )}
+
     <div
       className="rounded-2xl border transition-all overflow-hidden"
       style={{ backgroundColor: "#111110", borderColor: allScored ? `${cat.color}40` : "rgba(255,255,255,0.06)" }}
     >
       {/* Nominee info */}
       <div className="flex items-start gap-4 p-5 pb-4">
-        {n.images?.[0]?.url ? (
-          <img src={n.images[0].url} alt={n.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+        {imgUrl ? (
+          <button onClick={() => setLightbox(true)} className="flex-shrink-0 group relative">
+            <img src={imgUrl} alt={n.name} className="w-16 h-16 rounded-xl object-cover" />
+            <div className="absolute inset-0 rounded-xl bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <span className="text-white text-[9px] font-bold tracking-wider">VER</span>
+            </div>
+          </button>
         ) : (
           <div className="w-16 h-16 rounded-xl flex-shrink-0 bg-white/[0.04]" />
         )}
@@ -125,6 +154,7 @@ function NomineeCard({
         ))}
       </div>
     </div>
+    </>
   );
 }
 
