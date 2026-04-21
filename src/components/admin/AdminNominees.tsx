@@ -9,7 +9,7 @@ import {
   type NomineeDoc,
 } from "@/lib/firestore";
 import { CATEGORIES } from "@/lib/data";
-import { Plus, Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, Image as ImageIcon, Upload, Loader2 } from "lucide-react";
+import { Plus, Trash2, Pencil, Check, X, ChevronLeft, ChevronRight, Image as ImageIcon, Upload, Loader2, ChevronDown } from "lucide-react";
 import { uploadImage } from "@/lib/cloudinary";
 
 const NOMINEES_PER_CATEGORY = 3;
@@ -171,13 +171,15 @@ export default function AdminNominees() {
                       {/* Nominado existente */}
                       {nominee && !isEditing && (
                         <div className="h-full">
-                          {/* Slider preview */}
                           <SliderPreview images={nominee.images} color={cat.color} />
-                          {/* Info */}
                           <div className="p-3">
                             <p className="text-xs font-semibold text-white leading-tight">{nominee.name}</p>
                             <p className="text-[11px] text-white/40 italic mt-0.5">"{nominee.project}"</p>
                             <p className="text-[10px] text-white/25 mt-1 uppercase tracking-wider">{nominee.semester}</p>
+
+                            {/* Justificación badge + expand */}
+                            <JustificationPanel nominee={nominee} />
+
                             <div className="flex gap-1 mt-2">
                               <button
                                 onClick={() => {
@@ -344,6 +346,53 @@ function ImageSlotUploader({
         </button>
       )}
       <input ref={inputRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+    </div>
+  );
+}
+
+// ─── Justification panel ──────────────────────────────────────────────────────
+function JustificationPanel({ nominee }: { nominee: NomineeDoc }) {
+  const [open, setOpen] = useState(false);
+  const hasJustification = !!nominee.justifiedAt;
+  const CRITERIA = [
+    { key: "concepto" as const, label: "Concepto" },
+    { key: "ejecucion" as const, label: "Ejecución" },
+    { key: "innovacion" as const, label: "Innovación" },
+    { key: "impacto" as const, label: "Impacto" },
+  ];
+
+  return (
+    <div className="mt-2">
+      <button
+        onClick={() => setOpen(!open)}
+        className="flex items-center gap-1.5 text-[10px] font-medium transition-colors"
+        style={{ color: hasJustification ? "#00C97A" : "rgba(255,255,255,0.2)" }}
+      >
+        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: hasJustification ? "#00C97A" : "rgba(255,255,255,0.15)" }} />
+        {hasJustification ? "Justificación enviada" : "Sin justificación"}
+        {hasJustification && <ChevronDown className="w-3 h-3 transition-transform" style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }} />}
+      </button>
+
+      {open && hasJustification && (
+        <div className="mt-2 space-y-2 border-t border-white/[0.05] pt-2">
+          {nominee.members && nominee.members.length > 0 && (
+            <div>
+              <p className="text-[9px] uppercase tracking-widest text-white/25 mb-1">Integrantes</p>
+              <p className="text-[10px] text-white/50">{nominee.members.join(", ")}</p>
+            </div>
+          )}
+          {CRITERIA.map((cr) => {
+            const val = nominee.justifications?.[cr.key];
+            if (!val) return null;
+            return (
+              <div key={cr.key}>
+                <p className="text-[9px] uppercase tracking-widest text-white/25 mb-0.5">{cr.label}</p>
+                <p className="text-[10px] text-white/60 leading-relaxed">{val}</p>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }
