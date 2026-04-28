@@ -1,762 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Lock, ChevronDown, ChevronRight, Play, Pause, RotateCcw, Clock, Mic, Video, Award, Sparkles, ArrowRight, Shirt, FileSignature } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import {
+  Lock, ChevronDown, ChevronRight, Play, Pause, RotateCcw, Clock, Mic, Video, Award, Sparkles, ArrowRight,
+  Shirt, FileSignature, Pencil, Save, Plus, X, Check, Loader2,
+} from "lucide-react";
+import {
+  AgendaSection, SectionType, DEFAULT_SECTIONS,
+  subscribeAgenda, saveAgenda,
+} from "@/lib/agenda";
 
 const AGENDA_PASSWORD = "graphe2026";
-
-// ─── Ceremony Script ──────────────────────────────────────────────────────────
-type SectionType = "preevent" | "opening" | "video" | "talk" | "award" | "closing" | "interlude" | "signing";
-
-interface Section {
-  id: string;
-  start: string;           // "5:00 PM"
-  durationMin: number;
-  type: SectionType;
-  title: string;
-  subtitle?: string;
-  lead: string;            // who's on stage
-  color: string;
-  script: {
-    heading: string;
-    lines: string[];
-  }[];
-  cues?: string[];         // technical cues for staff
-}
-
-const SECTIONS: Section[] = [
-  {
-    id: "intervencion",
-    start: "3:00 PM",
-    durationMin: 90,
-    type: "preevent",
-    title: "Intervención de playeras",
-    subtitle: "Pre-evento — activación LDG",
-    lead: "Activación / Staff",
-    color: "#7C6992",
-    script: [
-      {
-        heading: "Concepto",
-        lines: [
-          "Las playeras intervenidas son parte de la filosofía 'Equivocarse también es diseñar.'",
-          "Los alumnos rompen, manchan e intervienen su propia ropa sin saber cómo va a quedar — y eso es precisamente el punto.",
-        ],
-      },
-      {
-        heading: "Logística",
-        lines: [
-          "Estaciones de intervención (estampado, sellado, customización).",
-          "Música ambiental, ambiente relajado.",
-          "Las playeras se quedan AFUERA en una mesa identificada con nombre.",
-          "Cada alumno la recoge AL TERMINAR la ceremonia.",
-        ],
-      },
-      {
-        heading: "Cierre del pre-evento",
-        lines: [
-          "A las 4:25 PM: anuncio por audio invitando a finalizar la intervención.",
-          "Se invita al público a dirigirse al espacio de la ceremonia.",
-        ],
-      },
-    ],
-    cues: [
-      "Staff A y B: ayudar en la activación",
-      "Mesa identificadora con nombres para cada playera",
-      "4:25 PM: anuncio de cierre del pre-evento",
-    ],
-  },
-  {
-    id: "setup",
-    start: "4:30 PM",
-    durationMin: 20,
-    type: "interlude",
-    title: "Limpieza + setup ceremonia",
-    subtitle: "Transición al espacio de premiación",
-    lead: "Producción / Staff",
-    color: "#305379",
-    script: [
-      {
-        heading: "Tareas",
-        lines: [
-          "Levantar estaciones de intervención.",
-          "Acomodo de sillas para la ceremonia.",
-          "Mesa de trofeos lista (7 trofeos en orden).",
-          "Mesa de firma de convenio lista (documentos + plumas).",
-          "Mesa de aperitivos / coctel afuera para post-ceremonia.",
-          "Pruebas de proyector, audio, micrófono.",
-          "Melissa, Cristóbal y Nacho llegan a backstage.",
-        ],
-      },
-      {
-        heading: "4:45 PM",
-        lines: ["Apertura de puertas para invitados a la ceremonia."],
-      },
-    ],
-    cues: [
-      "7 trofeos en orden: Foto → Ilustración → Logotipo → Producto → Empaque → Editorial → Digital",
-      "Mesa coctel y mesa de playeras AFUERA listas",
-    ],
-  },
-  {
-    id: "counter",
-    start: "5:00 PM",
-    durationMin: 10,
-    type: "video",
-    title: "Counter de 10 minutos",
-    subtitle: "Genera expectativa",
-    lead: "Pantalla",
-    color: "#FF6B00",
-    script: [
-      {
-        heading: "Qué se proyecta",
-        lines: [
-          "Counter regresivo de 10:00 → 00:00 en pantalla.",
-          "Estética Virgil-coded: T-MINUS, partículas de palabras de fondo, naranja construcción.",
-          "Función narrativa: anclar al público a que algo importante está por suceder.",
-        ],
-      },
-      {
-        heading: "Mientras corre",
-        lines: [
-          "Invitados terminan de sentarse.",
-          "Staff coordina últimos detalles.",
-          "Cristóbal espera en backstage.",
-          "Las luces empiezan a bajar gradualmente.",
-        ],
-      },
-    ],
-    cues: [
-      "Staff B: lanzar counter de 10 min",
-      "Staff A: música de tensión / build-up, luces bajando",
-    ],
-  },
-  {
-    id: "video-intro",
-    start: "5:10 PM",
-    durationMin: 3,
-    type: "video",
-    title: "Video de introducción",
-    subtitle: "Equivocarse también es diseñar",
-    lead: "Pantalla",
-    color: "#7C6992",
-    script: [
-      {
-        heading: "Tesis del video",
-        lines: [
-          "Apertura cinemática con el manifiesto 'Equivocarse también es diseñar.'",
-          "Frases rápidas tipo Apple — establecen la filosofía de toda la ceremonia.",
-          "Cierra con logo GRAPHĒ AWARDS 2026.",
-        ],
-      },
-    ],
-    cues: [
-      "Staff B: lanzar video-intro.mp4",
-      "Staff A: luces totalmente bajas, audio al máximo",
-      "Al terminar: luces suben al escenario, Cristóbal entra",
-    ],
-  },
-  {
-    id: "apertura",
-    start: "5:13 PM",
-    durationMin: 10,
-    type: "opening",
-    title: "Apertura",
-    subtitle: "Bienvenida + filosofía de la edición",
-    lead: "Cristóbal Guerra",
-    color: "#FFA400",
-    script: [
-      {
-        heading: "Saludo inicial",
-        lines: [
-          "Buenas tardes a todos. Bienvenidos a los Graphē Awards 2026.",
-          "Gracias a alumnos, familias, maestros y al jurado que hicieron posible esta segunda edición.",
-          "Esta noche celebramos el trabajo de los mejores proyectos del LDG de este semestre.",
-        ],
-      },
-      {
-        heading: "La filosofía de la edición",
-        lines: [
-          "Esta segunda edición de Graphē tiene una idea detrás.",
-          "Una que ya vieron en el video.",
-          "Que equivocarse también es diseñar.",
-          "Que todo lo que ven aquí esta noche — los 21 proyectos nominados — son el resultado de cientos de versiones, errores, regresos, dudas y decisiones.",
-          "Y que cada uno de ellos llegó hasta aquí porque alguien decidió arriesgarse.",
-        ],
-      },
-      {
-        heading: "Sobre Graphē",
-        lines: [
-          "Graphē reconoce siete categorías que cubren todas las disciplinas del diseño gráfico contemporáneo.",
-          "Cada proyecto fue evaluado por un jurado profesional sobre Concepto, Ejecución, Innovación e Impacto.",
-        ],
-      },
-      {
-        heading: "Agradecimientos",
-        lines: [
-          "Gracias a la UDEM por el apoyo institucional.",
-          "Gracias al jurado: Álex López, Nacho Cadena, Eduardo Guizar, Marcelo Seltzer, Vicky González, Marbella y Jessica Ochoa.",
-          "Y gracias a Melissa, quien va a conducir la ceremonia esta noche.",
-        ],
-      },
-      {
-        heading: "Transición a Nacho",
-        lines: [
-          "Antes de comenzar con las premiaciones, quiero ceder el escenario a alguien que entiende mejor que nadie lo que significa atreverse.",
-          "Un referente del diseño mexicano, invitado de honor de esta segunda edición.",
-          "Con ustedes: Nacho Cadena.",
-        ],
-      },
-    ],
-    cues: [
-      "Staff A: luz fija al centro del escenario",
-      "Staff B: pantalla con logo Graphē estático",
-    ],
-  },
-  {
-    id: "nacho",
-    start: "5:23 PM",
-    durationMin: 18,
-    type: "talk",
-    title: "Ponencia: Nacho Cadena",
-    subtitle: "Invitado de honor",
-    lead: "Nacho Cadena",
-    color: "#C63527",
-    script: [
-      {
-        heading: "Acción",
-        lines: [
-          "Cristóbal cede el mic.",
-          "Nacho da su ponencia (tema libre — diseño, carrera, disciplina).",
-          "Al terminar: aplausos.",
-          "IMPORTANTE: Nacho NO baja del escenario — se queda para la firma de convenio.",
-        ],
-      },
-    ],
-    cues: [
-      "Staff B: avanzar slides si Nacho usa presentación",
-      "Staff A: foco en el ponente",
-    ],
-  },
-  {
-    id: "firma-convenio",
-    start: "5:41 PM",
-    durationMin: 7,
-    type: "signing",
-    title: "Firma de convenio E+C® × UDEM",
-    subtitle: "Convenio de prácticas profesionales",
-    lead: "Nacho Cadena + Jessica Ochoa + Eduardo Guizar",
-    color: "#008755",
-    script: [
-      {
-        heading: "Contexto",
-        lines: [
-          "Convenio entre E+C® (Nacho Cadena) y la UDEM sobre prácticas profesionales para alumnos del LDG.",
-        ],
-      },
-      {
-        heading: "Cristóbal presenta el momento",
-        lines: [
-          "Cristóbal regresa al mic.",
-          "\"Antes de continuar, vamos a vivir un momento muy importante para el LDG.\"",
-          "\"Hoy firmamos un convenio entre E+C® y la UDEM que abrirá oportunidades de prácticas profesionales para nuestros alumnos.\"",
-          "\"Para hacer la firma oficial, suben al escenario nuestra Decana Jessica Ochoa Zamarripa y nuestro DDA, Eduardo Guizar.\"",
-        ],
-      },
-      {
-        heading: "Acción de firma",
-        lines: [
-          "Jessica Ochoa y Eduardo Guizar suben al escenario.",
-          "Los tres (Nacho, Jessica, Eduardo) se acercan a la mesa de firma.",
-          "Firma: Nacho → Jessica → Eduardo.",
-          "Foto oficial con los documentos firmados.",
-          "Foto adicional: apretón de manos / abrazo entre los tres.",
-        ],
-      },
-      {
-        heading: "Cierre del momento",
-        lines: [
-          "Cristóbal: \"Un aplauso para este nuevo convenio que va a impactar directamente a los alumnos del LDG. Gracias a Nacho, a Jessica y a Eduardo.\"",
-          "Los tres bajan del escenario. Melissa entra.",
-        ],
-      },
-    ],
-    cues: [
-      "Staff B: proyectar 'FIRMA DE CONVENIO · E+C® × UDEM · PRÁCTICAS PROFESIONALES' + logos",
-      "Staff A: luz amplia al escenario para 3 personas",
-      "Mesa de firma con documentos y plumas lista al centro",
-      "Fotógrafo oficial al frente",
-    ],
-  },
-  {
-    id: "video-nominados",
-    start: "5:48 PM",
-    durationMin: 5,
-    type: "video",
-    title: "Video de nominados",
-    subtitle: "Presentación de los 21 proyectos",
-    lead: "Pantalla",
-    color: "#7C6992",
-    script: [
-      {
-        heading: "Melissa entra y dice",
-        lines: [
-          "\"Buenas tardes, soy Melissa y tengo el honor de acompañarlos esta noche en los Graphē Awards 2026.\"",
-          "\"Antes de comenzar con las premiaciones, veamos a los nominados de esta segunda edición.\"",
-        ],
-      },
-      {
-        heading: "Proyección",
-        lines: [
-          "Se lanza video-nominados.mp4.",
-          "Luces bajas, pantalla encendida.",
-          "Al terminar: luces suben, Melissa al mic.",
-        ],
-      },
-    ],
-    cues: [
-      "Staff B: video-nominados.mp4",
-      "Staff A: luces bajas durante video",
-    ],
-  },
-  {
-    id: "premio-fotografia",
-    start: "5:53 PM",
-    durationMin: 8,
-    type: "award",
-    title: "Premio: Fotografía",
-    subtitle: "Categoría 1 de 7",
-    lead: "Melissa",
-    color: "#FFB3AB",
-    script: [
-      {
-        heading: "Introducción",
-        lines: [
-          "\"Comenzamos con la categoría de Fotografía.\"",
-          "\"La fotografía es el arte de capturar la luz y contar historias a través de una sola imagen.\"",
-          "\"El jurado evaluó la mirada, la composición y la narrativa visual de cada pieza.\"",
-        ],
-      },
-      {
-        heading: "Nominados",
-        lines: [
-          "\"Los nominados en Fotografía son:\"",
-          "\"Cecilia Abigail Ginez Benavides con 'Not Your Business'\"",
-          "\"Andrea Paola Hernández Tamez con 'Merch Agencia BackDoor'\"",
-          "\"Nicolas González con 'Alto Desempeño LDG'\"",
-          "\"Un aplauso para los tres.\"",
-        ],
-      },
-      {
-        heading: "Anuncio del ganador",
-        lines: [
-          "\"Y el Graphē Award en Fotografía es para…\"",
-          "(pausa 3 segundos)",
-          "\"Andrea Paola Hernández Tamez por 'Merch Agencia BackDoor'.\"",
-        ],
-      },
-      {
-        heading: "Entrega",
-        lines: [
-          "Andrea sube al escenario.",
-          "Cristóbal entrega el trofeo.",
-          "Foto rápida — NO discurso.",
-          "Andrea baja.",
-        ],
-      },
-      {
-        heading: "Transición",
-        lines: ["\"Un aplauso para Andrea. Continuamos con la siguiente categoría…\""],
-      },
-    ],
-    cues: [
-      "Staff B: slides de los 3 nominados",
-      "Trofeo de Fotografía listo",
-    ],
-  },
-  {
-    id: "premio-ilustracion",
-    start: "6:01 PM",
-    durationMin: 8,
-    type: "award",
-    title: "Premio: Ilustración",
-    subtitle: "Categoría 2 de 7",
-    lead: "Melissa",
-    color: "#008755",
-    script: [
-      {
-        heading: "Introducción",
-        lines: [
-          "\"Seguimos con Ilustración — pensamiento visual en su forma más libre.\"",
-          "\"El jurado buscó propuestas con voz propia, técnica sólida y narrativas memorables.\"",
-        ],
-      },
-      {
-        heading: "Nominados",
-        lines: [
-          "\"Los nominados son:\"",
-          "\"Fátima Robledo Pérez y Melissa Carolina Sánchez Torres con 'Discovering Madrid'\"",
-          "\"Anakaren Basurto Orozco, Cecilia Abigail Ginez Benavides y Ana Paula Lugo Arroyo con 'Tu sí puedes'\"",
-          "\"Natalia Núñez Rodríguez con 'Daruma'\"",
-        ],
-      },
-      {
-        heading: "Anuncio del ganador",
-        lines: [
-          "\"Y el Graphē Award en Ilustración es para…\"",
-          "(pausa)",
-          "\"Fátima Robledo Pérez y Melissa Carolina Sánchez Torres por 'Discovering Madrid'.\"",
-        ],
-      },
-      {
-        heading: "Entrega",
-        lines: ["Suben las dos, trofeo, foto, bajan."],
-      },
-      {
-        heading: "Transición",
-        lines: ["\"Felicidades a Fátima y Melissa. Vamos con la tercera…\""],
-      },
-    ],
-    cues: ["Staff B: slides Ilustración", "Trofeo Ilustración listo"],
-  },
-  {
-    id: "premio-logotipo",
-    start: "6:09 PM",
-    durationMin: 8,
-    type: "award",
-    title: "Premio: Logotipo",
-    subtitle: "Categoría 3 de 7",
-    lead: "Melissa",
-    color: "#305379",
-    script: [
-      {
-        heading: "Introducción",
-        lines: [
-          "\"La categoría de Logotipo premia la síntesis perfecta — comunicar una marca completa en un solo símbolo.\"",
-          "\"El jurado evaluó memorabilidad, originalidad y pertinencia con la marca representada.\"",
-        ],
-      },
-      {
-        heading: "Nominados",
-        lines: [
-          "\"Los nominados son:\"",
-          "\"Natalia Lozano Garza y Ana Lucía Herrera con 'María Plancarte'\"",
-          "\"Melisa Vargas Sepúlveda y Aurora del Campo con 'Habitante'\"",
-          "\"Anna Ferrer, Sofía Jiménez, Isela Wu y Ana Valeria Pérez con 'Known By'\"",
-        ],
-      },
-      {
-        heading: "Anuncio del ganador",
-        lines: [
-          "\"Y el Graphē Award en Logotipo es para…\"",
-          "(pausa)",
-          "\"Melisa Vargas Sepúlveda y Aurora del Campo por 'Habitante'.\"",
-        ],
-      },
-      {
-        heading: "Entrega",
-        lines: ["Suben, trofeo, foto, bajan."],
-      },
-      {
-        heading: "Transición",
-        lines: ["\"Felicidades a Melisa y Aurora. Continuamos…\""],
-      },
-    ],
-    cues: ["Staff B: slides Logotipo", "Trofeo Logotipo listo"],
-  },
-  {
-    id: "premio-producto",
-    start: "6:17 PM",
-    durationMin: 8,
-    type: "award",
-    title: "Premio: Producto",
-    subtitle: "Categoría 4 de 7",
-    lead: "Melissa",
-    color: "#DB6B30",
-    script: [
-      {
-        heading: "Introducción",
-        lines: [
-          "\"Llegamos a Producto — donde el diseño se vuelve tangible, funcional, usable.\"",
-          "\"Aquí se evaluó la intersección entre forma, función y fabricación.\"",
-        ],
-      },
-      {
-        heading: "Nominados",
-        lines: [
-          "\"Los nominados son:\"",
-          "\"Itzel Rivera Elizondo, Andrea Hernández, Alejandro Escobedo y Kenia González con 'Descubre al cuatroojos'\"",
-          "\"Ana Lucía Recio y Ana Lucía Herrera con 'Tin & Tan'\"",
-          "\"Ana Valeria Pérez Lagunas, Anna Ferrer, Isela Wu y Sofía Jiménez con 'Puntos de Conexión'\"",
-        ],
-      },
-      {
-        heading: "Anuncio del ganador",
-        lines: [
-          "\"Y el Graphē Award en Producto es para…\"",
-          "(pausa)",
-          "\"Ana Valeria Pérez Lagunas, Anna Ferrer, Isela Wu y Sofía Jiménez por 'Puntos de Conexión'.\"",
-        ],
-      },
-      {
-        heading: "Entrega",
-        lines: ["Suben las cuatro, trofeo, foto grupal, bajan."],
-      },
-      {
-        heading: "Transición",
-        lines: ["\"Un aplauso para el equipo de Puntos de Conexión. Seguimos…\""],
-      },
-    ],
-    cues: ["Staff B: slides Producto", "Trofeo Producto listo"],
-  },
-  {
-    id: "premio-empaque",
-    start: "6:25 PM",
-    durationMin: 8,
-    type: "award",
-    title: "Premio: Empaque",
-    subtitle: "Categoría 5 de 7",
-    lead: "Melissa",
-    color: "#7C6992",
-    script: [
-      {
-        heading: "Introducción",
-        lines: [
-          "\"En Empaque, el diseño pasa por tus manos cada día.\"",
-          "\"Se premió la integración de marca, estructura y mensaje en una sola pieza física.\"",
-        ],
-      },
-      {
-        heading: "Nominados",
-        lines: [
-          "\"Los nominados son:\"",
-          "\"Fátima Robledo Pérez y Melissa Carolina Sánchez Torres con 'Discovering Madrid'\"",
-          "\"Miranda Salazar Gutiérrez y Natalia Núñez Rodríguez con 'Camilia'\"",
-          "\"Anakaren Basurto Orozco con 'Crazy Pin'\"",
-        ],
-      },
-      {
-        heading: "Anuncio del ganador",
-        lines: [
-          "\"Y el Graphē Award en Empaque es para…\"",
-          "(pausa)",
-          "\"Miranda Salazar Gutiérrez y Natalia Núñez Rodríguez por 'Camilia'.\"",
-        ],
-      },
-      {
-        heading: "Entrega",
-        lines: ["Suben, trofeo, foto, bajan."],
-      },
-      {
-        heading: "Transición",
-        lines: ["\"Felicidades a Miranda y Natalia. Quedan dos categorías…\""],
-      },
-    ],
-    cues: ["Staff B: slides Empaque", "Trofeo Empaque listo"],
-  },
-  {
-    id: "premio-editorial",
-    start: "6:33 PM",
-    durationMin: 8,
-    type: "award",
-    title: "Premio: Editorial",
-    subtitle: "Categoría 6 de 7",
-    lead: "Melissa",
-    color: "#00594F",
-    script: [
-      {
-        heading: "Introducción",
-        lines: [
-          "\"Editorial es el reino del diseñador gráfico clásico — la tipografía, la retícula, el ritmo de la página.\"",
-          "\"Se evaluó composición, jerarquía visual y coherencia a lo largo de toda la pieza.\"",
-        ],
-      },
-      {
-        heading: "Nominados",
-        lines: [
-          "\"Los nominados son:\"",
-          "\"Ariana Sofía López Rodríguez, Joselyn Ximena Ibarra Quiroga y Fernando Marcos Ibarra Flores con 'Ruta del Arte en Nueva York'\"",
-          "\"Anakaren Basurto Orozco, Cecilia Abigail Ginez Benavides y Ana Paula Lugo Arroyo con 'Tu sí puedes'\"",
-          "\"Melisa Vargas Sepúlveda con 'Vértice Magazine'\"",
-        ],
-      },
-      {
-        heading: "Anuncio del ganador",
-        lines: [
-          "\"Y el Graphē Award en Editorial es para…\"",
-          "(pausa)",
-          "\"Anakaren Basurto Orozco, Cecilia Abigail Ginez Benavides y Ana Paula Lugo Arroyo por 'Tu sí puedes'.\"",
-        ],
-      },
-      {
-        heading: "Entrega",
-        lines: ["Suben las tres, trofeo, foto grupal, bajan."],
-      },
-      {
-        heading: "Transición a la última categoría",
-        lines: ["\"Felicidades al equipo de Tu sí puedes. Y llegamos a la última categoría de la noche…\""],
-      },
-    ],
-    cues: ["Staff B: slides Editorial", "Trofeo Editorial listo"],
-  },
-  {
-    id: "premio-digital",
-    start: "6:41 PM",
-    durationMin: 8,
-    type: "award",
-    title: "Premio: Digital",
-    subtitle: "Categoría 7 de 7 — última",
-    lead: "Melissa",
-    color: "#C63527",
-    script: [
-      {
-        heading: "Introducción",
-        lines: [
-          "\"Cerramos con Digital — la categoría donde el diseño se vuelve interacción, movimiento, código.\"",
-          "\"El jurado evaluó experiencia, usabilidad e innovación técnica.\"",
-        ],
-      },
-      {
-        heading: "Nominados",
-        lines: [
-          "\"Los nominados son:\"",
-          "\"Ana Paula Lugo Arroyo, Fernanda Daniela Lomeli Martínez, Esbeidy Yanett Cabrera Yáñez y María Fernanda Martínez Rodríguez con 'Santiago Restaurant Week'\"",
-          "\"Santiago Mateo Díaz Sánchez con 'Oneiro Creative Studio'\"",
-          "\"Ana Yamilette Salas Hernández, Mariana Luna Preciado, Sofía Magdalena Elizondo Caballero y Sara Abril Ponce Pinto con 'Sin Prispas No Hay Chispa'\"",
-        ],
-      },
-      {
-        heading: "Anuncio del ganador",
-        lines: [
-          "\"Y el último Graphē Award de la noche, en Digital, es para…\"",
-          "(pausa larga)",
-          "\"Santiago Mateo Díaz Sánchez por 'Oneiro Creative Studio'.\"",
-        ],
-      },
-      {
-        heading: "Entrega",
-        lines: [
-          "Sube Santiago, trofeo, foto, baja.",
-          "Melissa NO baja del escenario — entra directo al cierre.",
-        ],
-      },
-    ],
-    cues: [
-      "Staff B: slides Digital + PREPARAR video-cierre.mp4",
-      "Trofeo Digital listo (último)",
-    ],
-  },
-  {
-    id: "cierre-melissa",
-    start: "6:49 PM",
-    durationMin: 6,
-    type: "closing",
-    title: "Cierre — Melissa",
-    subtitle: "Filosofía + invitación a networking",
-    lead: "Melissa",
-    color: "#FFB3AB",
-    script: [
-      {
-        heading: "Reconocimiento a TODOS los participantes",
-        lines: [
-          "\"Esta noche premiamos a 7 proyectos.\"",
-          "\"Pero fueron 21 los que llegaron a esta final.\"",
-          "\"Y detrás de esos 21 proyectos hay más de 35 personas que trabajaron, iteraron y se arriesgaron.\"",
-          "\"Un aplauso enorme para todos ellos — los que ganaron, y los que estuvieron en la lista.\"",
-        ],
-      },
-      {
-        heading: "Volver a la tesis",
-        lines: [
-          "\"Lo que vieron esta noche no fueron 21 proyectos perfectos.\"",
-          "\"Fueron 21 proyectos que se atrevieron.\"",
-          "\"Que probaron, fallaron, regresaron, intentaron de nuevo.\"",
-          "\"Porque eso es lo que está detrás de cualquier cosa que valga la pena.\"",
-          "\"Esta segunda edición de Graphē tiene una sola idea:\"",
-          "\"Equivocarse también es diseñar.\"",
-          "\"Y este premio no es para los que llegaron sin tropezar.\"",
-          "\"Es para los que decidieron seguir aunque no supieran cómo iba a salir.\"",
-        ],
-      },
-      {
-        heading: "Invitación a la generación",
-        lines: [
-          "\"Ese es el LDG. Esa es la generación que está en este cuarto.\"",
-          "\"Y esa es la invitación que les dejamos esta noche:\"",
-          "\"Atrévanse. Arriésguense. Busquen formas nuevas de hacer las cosas.\"",
-          "\"Porque los proyectos que cambian al diseño nacen del que se equivoca primero.\"",
-        ],
-      },
-      {
-        heading: "Invitación a networking + playeras",
-        lines: [
-          "\"Antes de despedirnos: afuera tenemos aperitivos y un espacio para que sigamos conviviendo.\"",
-          "\"También pueden recoger sus playeras intervenidas del pre-evento — están en la mesa de afuera con su nombre.\"",
-          "\"Quédense, conózcanse, sigan haciendo conexiones — porque eso también es parte de Graphē.\"",
-          "\"Gracias por estar aquí. Buenas noches.\"",
-        ],
-      },
-      {
-        heading: "Salida",
-        lines: [
-          "Melissa baja del escenario.",
-          "Inmediatamente las luces bajan.",
-          "SIN PAUSA, arranca el video de créditos (sin anuncio).",
-        ],
-      },
-    ],
-    cues: [
-      "Staff A: luz suave, íntima, al centro de Melissa",
-      "Staff B: al final de Melissa, SIN ANUNCIO, lanzar video-cierre.mp4 (tipo créditos post-película)",
-    ],
-  },
-  {
-    id: "video-creditos",
-    start: "6:55 PM",
-    durationMin: 5,
-    type: "video",
-    title: "Video créditos",
-    subtitle: "Post-credits sin anuncio",
-    lead: "Pantalla",
-    color: "#7C6992",
-    script: [
-      {
-        heading: "Concepto",
-        lines: [
-          "Sin anuncio previo — corre solo después de Melissa.",
-          "Tipo créditos post-película.",
-          "Música suave de cierre, instrumental contemplativa.",
-          "Lista todos los nominados, jurado, staff.",
-        ],
-      },
-      {
-        heading: "Estructura del video",
-        lines: [
-          "GRAPHĒ AWARDS 2026 · SEGUNDA EDICIÓN",
-          "JURADO (7 nombres)",
-          "NOMINADOS por categoría (todos los integrantes de equipo)",
-          "INVITADO DE HONOR · Nacho Cadena",
-          "HOST · Melissa",
-          "DIRECCIÓN · Cristóbal Guerra",
-          "PRODUCCIÓN · Staff Graphē Awards",
-          "Cierra con: 'EQUIVOCARSE TAMBIÉN ES DISEÑAR. GRAPHĒ AWARDS 2026 · LDG · UDEM'",
-        ],
-      },
-      {
-        heading: "Fin del evento",
-        lines: [
-          "Al terminar el video: luces suben gradualmente.",
-          "Música ambiental para networking.",
-          "Networking + entrega de playeras intervenidas: 7:00 PM en adelante (afuera).",
-        ],
-      },
-    ],
-    cues: [
-      "Staff B: video-cierre.mp4 corre solo (sin anuncio)",
-      "Staff A: luces totalmente bajas durante video, suben al terminar",
-      "Música ambiental para post-evento lista",
-    ],
-  },
-];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 function parseStart(s: string): number {
@@ -789,17 +43,91 @@ function typeIcon(type: SectionType) {
   }
 }
 
+// ─── Auto-resize textarea ────────────────────────────────────────────────────
+function AutoTextarea({
+  value, onChange, className = "", placeholder = "",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  className?: string;
+  placeholder?: string;
+}) {
+  const ref = useRef<HTMLTextAreaElement>(null);
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.style.height = "auto";
+      ref.current.style.height = ref.current.scrollHeight + "px";
+    }
+  }, [value]);
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      rows={1}
+      className={`w-full bg-white/[0.03] border border-white/[0.08] rounded-md px-2 py-1.5 text-sm text-white/90 focus:outline-none focus:border-[#FFA400]/50 resize-none overflow-hidden ${className}`}
+    />
+  );
+}
+
+function EditableInput({
+  value, onChange, className = "", placeholder = "",
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  className?: string;
+  placeholder?: string;
+}) {
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      placeholder={placeholder}
+      className={`bg-white/[0.03] border border-white/[0.08] rounded-md px-2 py-1 text-sm text-white/90 focus:outline-none focus:border-[#FFA400]/50 ${className}`}
+    />
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 export default function AgendaPage() {
   const [password, setPassword] = useState("");
   const [authenticated, setAuthenticated] = useState(false);
-  const [error, setError] = useState(false);
+  const [authError, setAuthError] = useState(false);
+
+  // Sections from Firestore (with default fallback)
+  const [sections, setSections] = useState<AgendaSection[]>(DEFAULT_SECTIONS);
+  const [loadedFromCloud, setLoadedFromCloud] = useState(false);
+
+  // Edit mode
+  const [editMode, setEditMode] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Live progress tracking
   const [running, setRunning] = useState(false);
   const [elapsedSec, setElapsedSec] = useState(0);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
+  // Subscribe to Firestore agenda
+  useEffect(() => {
+    if (!authenticated) return;
+    const unsub = subscribeAgenda((doc) => {
+      if (doc && doc.sections && doc.sections.length > 0) {
+        setSections(doc.sections);
+        setLoadedFromCloud(true);
+      } else {
+        // No data in Firestore — seed with defaults
+        setSections(DEFAULT_SECTIONS);
+        saveAgenda(DEFAULT_SECTIONS).catch(() => {});
+        setLoadedFromCloud(true);
+      }
+    });
+    return unsub;
+  }, [authenticated]);
+
+  // Live timer
   useEffect(() => {
     if (!running) return;
     const id = setInterval(() => setElapsedSec((s) => s + 1), 1000);
@@ -810,12 +138,89 @@ export default function AgendaPage() {
     e.preventDefault();
     if (password === AGENDA_PASSWORD) {
       setAuthenticated(true);
-      setError(false);
+      setAuthError(false);
     } else {
-      setError(true);
+      setAuthError(true);
     }
   }
 
+  // Debounced save: schedule save 800ms after last edit
+  function scheduleSave(newSections: AgendaSection[]) {
+    setSections(newSections);
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    setSaveStatus("saving");
+    saveTimeoutRef.current = setTimeout(async () => {
+      try {
+        await saveAgenda(newSections);
+        setSaveStatus("saved");
+        setTimeout(() => setSaveStatus("idle"), 1500);
+      } catch {
+        setSaveStatus("error");
+      }
+    }, 800);
+  }
+
+  function updateSection(idx: number, patch: Partial<AgendaSection>) {
+    const next = sections.map((s, i) => (i === idx ? { ...s, ...patch } : s));
+    scheduleSave(next);
+  }
+
+  function updateScriptBlock(sIdx: number, bIdx: number, patch: Partial<{ heading: string; lines: string[] }>) {
+    const next = sections.map((s, i) => {
+      if (i !== sIdx) return s;
+      const newScript = s.script.map((b, j) => (j === bIdx ? { ...b, ...patch } : b));
+      return { ...s, script: newScript };
+    });
+    scheduleSave(next);
+  }
+
+  function updateScriptLine(sIdx: number, bIdx: number, lIdx: number, value: string) {
+    const block = sections[sIdx].script[bIdx];
+    const newLines = block.lines.map((l, i) => (i === lIdx ? value : l));
+    updateScriptBlock(sIdx, bIdx, { lines: newLines });
+  }
+
+  function addScriptLine(sIdx: number, bIdx: number) {
+    const block = sections[sIdx].script[bIdx];
+    updateScriptBlock(sIdx, bIdx, { lines: [...block.lines, ""] });
+  }
+
+  function removeScriptLine(sIdx: number, bIdx: number, lIdx: number) {
+    const block = sections[sIdx].script[bIdx];
+    updateScriptBlock(sIdx, bIdx, { lines: block.lines.filter((_, i) => i !== lIdx) });
+  }
+
+  function addScriptBlock(sIdx: number) {
+    const newBlock = { heading: "Nuevo bloque", lines: [""] };
+    updateSection(sIdx, { script: [...sections[sIdx].script, newBlock] });
+  }
+
+  function removeScriptBlock(sIdx: number, bIdx: number) {
+    updateSection(sIdx, { script: sections[sIdx].script.filter((_, i) => i !== bIdx) });
+  }
+
+  function updateCue(sIdx: number, cIdx: number, value: string) {
+    const cues = sections[sIdx].cues || [];
+    updateSection(sIdx, { cues: cues.map((c, i) => (i === cIdx ? value : c)) });
+  }
+
+  function addCue(sIdx: number) {
+    const cues = sections[sIdx].cues || [];
+    updateSection(sIdx, { cues: [...cues, ""] });
+  }
+
+  function removeCue(sIdx: number, cIdx: number) {
+    const cues = sections[sIdx].cues || [];
+    updateSection(sIdx, { cues: cues.filter((_, i) => i !== cIdx) });
+  }
+
+  function resetToDefault() {
+    if (confirm("¿Restaurar el guión original? Se perderán todos los cambios actuales.")) {
+      scheduleSave(DEFAULT_SECTIONS);
+    }
+  }
+
+  // ─── Login screen ────────────────────────────────────────────────────────
   if (!authenticated) {
     return (
       <div className="min-h-screen bg-[#0a0a09] flex items-center justify-center px-4">
@@ -838,7 +243,7 @@ export default function AgendaPage() {
                 className="w-full bg-white/[0.05] border border-white/[0.08] rounded-xl px-4 py-3 text-white text-sm placeholder-white/20 focus:outline-none focus:border-[#FFA400]/40 transition-colors"
                 autoFocus
               />
-              {error && <p className="text-red-400 text-xs mt-2 ml-1">Contraseña incorrecta</p>}
+              {authError && <p className="text-red-400 text-xs mt-2 ml-1">Contraseña incorrecta</p>}
             </div>
             <button
               type="submit"
@@ -852,24 +257,33 @@ export default function AgendaPage() {
     );
   }
 
-  // ─── Progress computation ───────────────────────────────────────────────────
+  // ─── Loading from Firestore ──────────────────────────────────────────────
+  if (!loadedFromCloud) {
+    return (
+      <div className="min-h-screen bg-[#0a0a09] flex items-center justify-center">
+        <Loader2 className="w-6 h-6 text-white/40 animate-spin" />
+      </div>
+    );
+  }
+
+  // ─── Progress computation ────────────────────────────────────────────────
   let currentIdx = -1;
   if (running) {
     const elapsedMin = elapsedSec / 60;
     let acc = 0;
-    for (let i = 0; i < SECTIONS.length; i++) {
-      const dur = SECTIONS[i].durationMin;
+    for (let i = 0; i < sections.length; i++) {
+      const dur = sections[i].durationMin;
       if (elapsedMin >= acc && elapsedMin < acc + dur) {
         currentIdx = i;
         break;
       }
       acc += dur;
     }
-    if (currentIdx === -1 && elapsedMin >= acc) currentIdx = SECTIONS.length - 1;
+    if (currentIdx === -1 && elapsedMin >= acc) currentIdx = sections.length - 1;
   }
-  const nextIdx = currentIdx >= 0 && currentIdx < SECTIONS.length - 1 ? currentIdx + 1 : -1;
+  const nextIdx = currentIdx >= 0 && currentIdx < sections.length - 1 ? currentIdx + 1 : -1;
 
-  const totalSec = SECTIONS.reduce((s, sec) => s + sec.durationMin * 60, 0);
+  const totalSec = sections.reduce((s, sec) => s + sec.durationMin * 60, 0);
   const progressPct = Math.min(100, (elapsedSec / totalSec) * 100);
 
   function formatElapsed(sec: number): string {
@@ -882,69 +296,114 @@ export default function AgendaPage() {
     <div className="min-h-screen bg-[#0a0a09] text-white pb-20">
       {/* Header */}
       <div className="sticky top-0 z-40 bg-[#0a0a09]/95 backdrop-blur-sm border-b border-white/[0.06]">
-        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
+        <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between gap-3">
+          <div className="min-w-0">
             <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase">Graphē Awards 2026 · 2ª edición</p>
             <h1 className="text-white font-bold text-lg">Agenda ceremonia · 29 abril</h1>
             <p className="text-[#FFA400]/80 text-[11px] mt-0.5 italic">"Equivocarse también es diseñar."</p>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Save status indicator */}
+            {editMode && (
+              <div className="text-[10px] flex items-center gap-1.5">
+                {saveStatus === "saving" && (
+                  <span className="text-white/50 flex items-center gap-1"><Loader2 className="w-3 h-3 animate-spin" /> Guardando...</span>
+                )}
+                {saveStatus === "saved" && (
+                  <span className="text-[#008755] flex items-center gap-1"><Check className="w-3 h-3" /> Guardado</span>
+                )}
+                {saveStatus === "error" && (
+                  <span className="text-red-400 flex items-center gap-1"><X className="w-3 h-3" /> Error</span>
+                )}
+              </div>
+            )}
+
+            {/* Edit toggle */}
             <button
-              onClick={() => setRunning(!running)}
-              className="flex items-center gap-1.5 bg-[#FFA400] text-black font-semibold text-xs px-3 py-2 rounded-lg hover:bg-[#ffb520] transition-colors"
+              onClick={() => setEditMode(!editMode)}
+              className={`flex items-center gap-1.5 text-xs font-semibold px-3 py-2 rounded-lg transition-colors ${
+                editMode
+                  ? "bg-[#FFA400] text-black hover:bg-[#ffb520]"
+                  : "bg-white/[0.05] text-white/70 hover:bg-white/[0.1] border border-white/[0.08]"
+              }`}
             >
-              {running ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
-              {running ? "Pausar" : "Iniciar"}
+              <Pencil className="w-3.5 h-3.5" />
+              {editMode ? "Salir edición" : "Editar"}
             </button>
+
+            {/* Play/Pause */}
+            {!editMode && (
+              <button
+                onClick={() => setRunning(!running)}
+                className="flex items-center gap-1.5 bg-[#FFA400] text-black font-semibold text-xs px-3 py-2 rounded-lg hover:bg-[#ffb520] transition-colors"
+              >
+                {running ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
+                {running ? "Pausar" : "Iniciar"}
+              </button>
+            )}
+
+            {/* Reset timer (or reset agenda when editing) */}
             <button
-              onClick={() => { setRunning(false); setElapsedSec(0); }}
+              onClick={() => {
+                if (editMode) resetToDefault();
+                else { setRunning(false); setElapsedSec(0); }
+              }}
               className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] transition-colors"
-              title="Reiniciar"
+              title={editMode ? "Restaurar guión original" : "Reiniciar timer"}
             >
               <RotateCcw className="w-3.5 h-3.5 text-white/60" />
             </button>
           </div>
         </div>
         {/* Progress bar */}
-        <div className="max-w-4xl mx-auto px-4 pb-3">
-          <div className="flex items-center justify-between text-[10px] text-white/40 mb-1.5 tabular-nums">
-            <span>{formatElapsed(elapsedSec)}</span>
-            <span>{running ? (currentIdx >= 0 ? `En vivo · ${SECTIONS[currentIdx].title}` : "Iniciando...") : "Detenido"}</span>
-            <span>{formatElapsed(totalSec)}</span>
+        {!editMode && (
+          <div className="max-w-4xl mx-auto px-4 pb-3">
+            <div className="flex items-center justify-between text-[10px] text-white/40 mb-1.5 tabular-nums">
+              <span>{formatElapsed(elapsedSec)}</span>
+              <span>{running ? (currentIdx >= 0 ? `En vivo · ${sections[currentIdx].title}` : "Iniciando...") : "Detenido"}</span>
+              <span>{formatElapsed(totalSec)}</span>
+            </div>
+            <div className="h-1 rounded-full bg-white/[0.05] overflow-hidden">
+              <div
+                className="h-full bg-[#FFA400] transition-all duration-500 ease-linear"
+                style={{ width: `${progressPct}%` }}
+              />
+            </div>
           </div>
-          <div className="h-1 rounded-full bg-white/[0.05] overflow-hidden">
-            <div
-              className="h-full bg-[#FFA400] transition-all duration-500 ease-linear"
-              style={{ width: `${progressPct}%` }}
-            />
+        )}
+        {editMode && (
+          <div className="max-w-4xl mx-auto px-4 pb-3">
+            <p className="text-[11px] text-[#FFA400]/70">
+              Modo edición · Los cambios se guardan automáticamente y se sincronizan en todos los dispositivos
+            </p>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Up next banner */}
-      {running && nextIdx >= 0 && (
+      {/* Up next banner (only when running) */}
+      {!editMode && running && nextIdx >= 0 && (
         <div className="max-w-4xl mx-auto px-4 pt-6">
           <div
             className="flex items-center gap-3 rounded-2xl px-4 py-3 border"
-            style={{ backgroundColor: `${SECTIONS[nextIdx].color}10`, borderColor: `${SECTIONS[nextIdx].color}30` }}
+            style={{ backgroundColor: `${sections[nextIdx].color}10`, borderColor: `${sections[nextIdx].color}30` }}
           >
-            <div className="text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: SECTIONS[nextIdx].color }}>
+            <div className="text-[10px] font-semibold tracking-[0.2em] uppercase" style={{ color: sections[nextIdx].color }}>
               Siguiente
             </div>
-            <ArrowRight className="w-3 h-3" style={{ color: SECTIONS[nextIdx].color }} />
-            <div className="text-sm font-semibold text-white">{SECTIONS[nextIdx].title}</div>
-            <div className="text-xs text-white/40 ml-auto">{SECTIONS[nextIdx].start}</div>
+            <ArrowRight className="w-3 h-3" style={{ color: sections[nextIdx].color }} />
+            <div className="text-sm font-semibold text-white">{sections[nextIdx].title}</div>
+            <div className="text-xs text-white/40 ml-auto">{sections[nextIdx].start}</div>
           </div>
         </div>
       )}
 
       {/* Timeline */}
       <div className="max-w-4xl mx-auto px-4 pt-6 space-y-3">
-        {SECTIONS.map((section, idx) => {
+        {sections.map((section, idx) => {
           const Icon = typeIcon(section.type);
-          const isCurrent = running && idx === currentIdx;
-          const isPast = running && idx < currentIdx;
-          const isExpanded = expandedId === section.id;
+          const isCurrent = !editMode && running && idx === currentIdx;
+          const isPast = !editMode && running && idx < currentIdx;
+          const isExpanded = editMode || expandedId === section.id;
           const endTime = formatTime(parseStart(section.start) + section.durationMin);
 
           return (
@@ -957,78 +416,207 @@ export default function AgendaPage() {
                 opacity: isPast ? 0.5 : 1,
               }}
             >
-              <button
-                onClick={() => setExpandedId(isExpanded ? null : section.id)}
-                className="w-full flex items-start gap-4 p-5 text-left hover:bg-white/[0.02] transition-colors"
-              >
-                {/* Icon + index */}
-                <div className="flex flex-col items-center gap-1 flex-shrink-0">
-                  <div
-                    className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ backgroundColor: `${section.color}20`, border: `1px solid ${section.color}40` }}
-                  >
-                    <Icon className="w-4 h-4" style={{ color: section.color }} />
+              {/* Header (clickable in view mode, always visible in edit mode) */}
+              {editMode ? (
+                <div className="flex items-start gap-4 p-5">
+                  <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: `${section.color}20`, border: `1px solid ${section.color}40` }}
+                    >
+                      <Icon className="w-4 h-4" style={{ color: section.color }} />
+                    </div>
+                    <span className="text-[10px] text-white/30 tabular-nums">{String(idx + 1).padStart(2, "0")}</span>
                   </div>
-                  <span className="text-[10px] text-white/30 tabular-nums">{String(idx + 1).padStart(2, "0")}</span>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-baseline gap-2 mb-0.5 flex-wrap">
-                    <h3 className="text-base font-bold text-white">{section.title}</h3>
-                    {isCurrent && (
-                      <span className="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: section.color, color: "#000" }}>
-                        EN VIVO
-                      </span>
-                    )}
+                  <div className="flex-1 min-w-0 space-y-2">
+                    <EditableInput
+                      value={section.title}
+                      onChange={(v) => updateSection(idx, { title: v })}
+                      className="text-base font-bold w-full"
+                      placeholder="Título"
+                    />
+                    <EditableInput
+                      value={section.subtitle || ""}
+                      onChange={(v) => updateSection(idx, { subtitle: v })}
+                      className="text-xs w-full"
+                      placeholder="Subtítulo"
+                    />
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <EditableInput
+                        value={section.start}
+                        onChange={(v) => updateSection(idx, { start: v })}
+                        className="text-[11px] tabular-nums w-24"
+                        placeholder="5:00 PM"
+                      />
+                      <span className="text-white/30 text-[11px]">·</span>
+                      <input
+                        type="number"
+                        value={section.durationMin}
+                        onChange={(e) => updateSection(idx, { durationMin: parseInt(e.target.value) || 0 })}
+                        className="bg-white/[0.03] border border-white/[0.08] rounded-md px-2 py-1 text-[11px] text-white/90 focus:outline-none focus:border-[#FFA400]/50 w-16 tabular-nums"
+                      />
+                      <span className="text-white/40 text-[11px]">min</span>
+                      <span className="text-white/30 text-[11px]">·</span>
+                      <EditableInput
+                        value={section.lead}
+                        onChange={(v) => updateSection(idx, { lead: v })}
+                        className="text-[11px] flex-1"
+                        placeholder="Responsable"
+                      />
+                    </div>
                   </div>
-                  {section.subtitle && <p className="text-xs text-white/50 mb-2">{section.subtitle}</p>}
-                  <div className="flex items-center gap-3 text-[11px] text-white/40 flex-wrap">
-                    <span className="tabular-nums">{section.start} — {endTime}</span>
-                    <span>·</span>
-                    <span>{section.durationMin} min</span>
-                    <span>·</span>
-                    <span className="text-white/60">{section.lead}</span>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : section.id)}
+                  className="w-full flex items-start gap-4 p-5 text-left hover:bg-white/[0.02] transition-colors"
+                >
+                  <div className="flex flex-col items-center gap-1 flex-shrink-0">
+                    <div
+                      className="w-10 h-10 rounded-xl flex items-center justify-center"
+                      style={{ backgroundColor: `${section.color}20`, border: `1px solid ${section.color}40` }}
+                    >
+                      <Icon className="w-4 h-4" style={{ color: section.color }} />
+                    </div>
+                    <span className="text-[10px] text-white/30 tabular-nums">{String(idx + 1).padStart(2, "0")}</span>
                   </div>
-                </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-baseline gap-2 mb-0.5 flex-wrap">
+                      <h3 className="text-base font-bold text-white">{section.title}</h3>
+                      {isCurrent && (
+                        <span className="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: section.color, color: "#000" }}>
+                          EN VIVO
+                        </span>
+                      )}
+                    </div>
+                    {section.subtitle && <p className="text-xs text-white/50 mb-2">{section.subtitle}</p>}
+                    <div className="flex items-center gap-3 text-[11px] text-white/40 flex-wrap">
+                      <span className="tabular-nums">{section.start} — {endTime}</span>
+                      <span>·</span>
+                      <span>{section.durationMin} min</span>
+                      <span>·</span>
+                      <span className="text-white/60">{section.lead}</span>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 pt-1">
+                    {isExpanded ? <ChevronDown className="w-4 h-4 text-white/40" /> : <ChevronRight className="w-4 h-4 text-white/40" />}
+                  </div>
+                </button>
+              )}
 
-                {/* Expand chevron */}
-                <div className="flex-shrink-0 pt-1">
-                  {isExpanded ? <ChevronDown className="w-4 h-4 text-white/40" /> : <ChevronRight className="w-4 h-4 text-white/40" />}
-                </div>
-              </button>
-
-              {/* Expanded content */}
+              {/* Expanded body */}
               {isExpanded && (
                 <div className="border-t border-white/[0.06] p-5 space-y-5">
-                  {section.script.map((block, i) => (
-                    <div key={i}>
-                      <h4 className="text-[10px] font-bold tracking-[0.2em] uppercase mb-2" style={{ color: section.color }}>
-                        {block.heading}
-                      </h4>
-                      <div className="space-y-2">
-                        {block.lines.map((line, j) => (
-                          <p key={j} className="text-sm text-white/80 leading-relaxed">{line}</p>
+                  {section.script.map((block, bIdx) => (
+                    <div key={bIdx} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        {editMode ? (
+                          <EditableInput
+                            value={block.heading}
+                            onChange={(v) => updateScriptBlock(idx, bIdx, { heading: v })}
+                            className="text-[10px] font-bold tracking-[0.2em] uppercase flex-1"
+                            placeholder="Título del bloque"
+                          />
+                        ) : (
+                          <h4 className="text-[10px] font-bold tracking-[0.2em] uppercase" style={{ color: section.color }}>
+                            {block.heading}
+                          </h4>
+                        )}
+                        {editMode && (
+                          <button
+                            onClick={() => removeScriptBlock(idx, bIdx)}
+                            className="ml-2 text-white/30 hover:text-red-400 transition-colors"
+                            title="Eliminar bloque"
+                          >
+                            <X className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                      <div className="space-y-1.5">
+                        {block.lines.map((line, lIdx) => (
+                          <div key={lIdx} className="flex items-start gap-2">
+                            {editMode ? (
+                              <>
+                                <AutoTextarea
+                                  value={line}
+                                  onChange={(v) => updateScriptLine(idx, bIdx, lIdx, v)}
+                                  placeholder="Línea de texto..."
+                                />
+                                <button
+                                  onClick={() => removeScriptLine(idx, bIdx, lIdx)}
+                                  className="text-white/30 hover:text-red-400 transition-colors mt-1.5"
+                                  title="Eliminar línea"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </>
+                            ) : (
+                              <p className="text-sm text-white/80 leading-relaxed">{line}</p>
+                            )}
+                          </div>
                         ))}
+                        {editMode && (
+                          <button
+                            onClick={() => addScriptLine(idx, bIdx)}
+                            className="flex items-center gap-1 text-[10px] text-white/40 hover:text-white/70 transition-colors"
+                          >
+                            <Plus className="w-3 h-3" /> Agregar línea
+                          </button>
+                        )}
                       </div>
                     </div>
                   ))}
 
-                  {section.cues && section.cues.length > 0 && (
+                  {editMode && (
+                    <button
+                      onClick={() => addScriptBlock(idx)}
+                      className="flex items-center gap-1 text-[10px] text-white/40 hover:text-white/70 transition-colors"
+                    >
+                      <Plus className="w-3 h-3" /> Agregar bloque
+                    </button>
+                  )}
+
+                  {/* Cues */}
+                  {(section.cues && section.cues.length > 0) || editMode ? (
                     <div className="rounded-xl bg-white/[0.03] border border-white/[0.06] p-4">
                       <h4 className="text-[10px] font-bold tracking-[0.2em] uppercase text-white/40 mb-2">
                         Cues técnicos
                       </h4>
                       <ul className="space-y-1">
-                        {section.cues.map((cue, i) => (
-                          <li key={i} className="text-xs text-white/60 flex items-start gap-2">
-                            <span className="text-white/30">·</span>
-                            <span>{cue}</span>
+                        {(section.cues || []).map((cue, cIdx) => (
+                          <li key={cIdx} className="flex items-start gap-2">
+                            <span className="text-white/30 text-xs mt-0.5">·</span>
+                            {editMode ? (
+                              <>
+                                <AutoTextarea
+                                  value={cue}
+                                  onChange={(v) => updateCue(idx, cIdx, v)}
+                                  className="text-xs"
+                                  placeholder="Cue técnico..."
+                                />
+                                <button
+                                  onClick={() => removeCue(idx, cIdx)}
+                                  className="text-white/30 hover:text-red-400 transition-colors mt-1.5"
+                                >
+                                  <X className="w-3 h-3" />
+                                </button>
+                              </>
+                            ) : (
+                              <span className="text-xs text-white/60">{cue}</span>
+                            )}
                           </li>
                         ))}
                       </ul>
+                      {editMode && (
+                        <button
+                          onClick={() => addCue(idx)}
+                          className="mt-2 flex items-center gap-1 text-[10px] text-white/40 hover:text-white/70 transition-colors"
+                        >
+                          <Plus className="w-3 h-3" /> Agregar cue
+                        </button>
+                      )}
                     </div>
-                  )}
+                  ) : null}
                 </div>
               )}
             </div>
