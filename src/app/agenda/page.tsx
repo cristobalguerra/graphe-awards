@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Lock, ChevronDown, ChevronRight, Play, Pause, RotateCcw, Clock, Mic, Video, Award, Sparkles, ArrowRight } from "lucide-react";
+import { Lock, ChevronDown, ChevronRight, Play, Pause, RotateCcw, Clock, Mic, Video, Award, Sparkles, ArrowRight, Shirt, FileSignature } from "lucide-react";
 
 const AGENDA_PASSWORD = "graphe2026";
 
 // ─── Ceremony Script ──────────────────────────────────────────────────────────
-type SectionType = "opening" | "video" | "talk" | "award" | "closing" | "interlude";
+type SectionType = "preevent" | "opening" | "video" | "talk" | "award" | "closing" | "interlude" | "signing";
 
 interface Section {
   id: string;
@@ -26,66 +26,196 @@ interface Section {
 
 const SECTIONS: Section[] = [
   {
-    id: "apertura",
+    id: "intervencion",
+    start: "3:00 PM",
+    durationMin: 90,
+    type: "preevent",
+    title: "Intervención de playeras",
+    subtitle: "Pre-evento — activación LDG",
+    lead: "Activación / Staff",
+    color: "#7C6992",
+    script: [
+      {
+        heading: "Concepto",
+        lines: [
+          "Las playeras intervenidas son parte de la filosofía 'Equivocarse también es diseñar.'",
+          "Los alumnos rompen, manchan e intervienen su propia ropa sin saber cómo va a quedar — y eso es precisamente el punto.",
+        ],
+      },
+      {
+        heading: "Logística",
+        lines: [
+          "Estaciones de intervención (estampado, sellado, customización).",
+          "Música ambiental, ambiente relajado.",
+          "Las playeras se quedan AFUERA en una mesa identificada con nombre.",
+          "Cada alumno la recoge AL TERMINAR la ceremonia.",
+        ],
+      },
+      {
+        heading: "Cierre del pre-evento",
+        lines: [
+          "A las 4:25 PM: anuncio por audio invitando a finalizar la intervención.",
+          "Se invita al público a dirigirse al espacio de la ceremonia.",
+        ],
+      },
+    ],
+    cues: [
+      "Staff A y B: ayudar en la activación",
+      "Mesa identificadora con nombres para cada playera",
+      "4:25 PM: anuncio de cierre del pre-evento",
+    ],
+  },
+  {
+    id: "setup",
+    start: "4:30 PM",
+    durationMin: 20,
+    type: "interlude",
+    title: "Limpieza + setup ceremonia",
+    subtitle: "Transición al espacio de premiación",
+    lead: "Producción / Staff",
+    color: "#305379",
+    script: [
+      {
+        heading: "Tareas",
+        lines: [
+          "Levantar estaciones de intervención.",
+          "Acomodo de sillas para la ceremonia.",
+          "Mesa de trofeos lista (7 trofeos en orden).",
+          "Mesa de firma de convenio lista (documentos + plumas).",
+          "Mesa de aperitivos / coctel afuera para post-ceremonia.",
+          "Pruebas de proyector, audio, micrófono.",
+          "Melissa, Cristóbal y Nacho llegan a backstage.",
+        ],
+      },
+      {
+        heading: "4:45 PM",
+        lines: ["Apertura de puertas para invitados a la ceremonia."],
+      },
+    ],
+    cues: [
+      "7 trofeos en orden: Foto → Ilustración → Logotipo → Producto → Empaque → Editorial → Digital",
+      "Mesa coctel y mesa de playeras AFUERA listas",
+    ],
+  },
+  {
+    id: "counter",
     start: "5:00 PM",
+    durationMin: 10,
+    type: "video",
+    title: "Counter de 10 minutos",
+    subtitle: "Genera expectativa",
+    lead: "Pantalla",
+    color: "#FF6B00",
+    script: [
+      {
+        heading: "Qué se proyecta",
+        lines: [
+          "Counter regresivo de 10:00 → 00:00 en pantalla.",
+          "Estética Virgil-coded: T-MINUS, partículas de palabras de fondo, naranja construcción.",
+          "Función narrativa: anclar al público a que algo importante está por suceder.",
+        ],
+      },
+      {
+        heading: "Mientras corre",
+        lines: [
+          "Invitados terminan de sentarse.",
+          "Staff coordina últimos detalles.",
+          "Cristóbal espera en backstage.",
+          "Las luces empiezan a bajar gradualmente.",
+        ],
+      },
+    ],
+    cues: [
+      "Staff B: lanzar counter de 10 min",
+      "Staff A: música de tensión / build-up, luces bajando",
+    ],
+  },
+  {
+    id: "video-intro",
+    start: "5:10 PM",
+    durationMin: 3,
+    type: "video",
+    title: "Video de introducción",
+    subtitle: "Equivocarse también es diseñar",
+    lead: "Pantalla",
+    color: "#7C6992",
+    script: [
+      {
+        heading: "Tesis del video",
+        lines: [
+          "Apertura cinemática con el manifiesto 'Equivocarse también es diseñar.'",
+          "Frases rápidas tipo Apple — establecen la filosofía de toda la ceremonia.",
+          "Cierra con logo GRAPHĒ AWARDS 2026.",
+        ],
+      },
+    ],
+    cues: [
+      "Staff B: lanzar video-intro.mp4",
+      "Staff A: luces totalmente bajas, audio al máximo",
+      "Al terminar: luces suben al escenario, Cristóbal entra",
+    ],
+  },
+  {
+    id: "apertura",
+    start: "5:13 PM",
     durationMin: 10,
     type: "opening",
     title: "Apertura",
-    subtitle: "Bienvenida oficial",
+    subtitle: "Bienvenida + filosofía de la edición",
     lead: "Cristóbal Guerra",
     color: "#FFA400",
     script: [
       {
-        heading: "Entrada al escenario",
-        lines: [
-          "Staff A baja luces de sala y sube música de apertura.",
-          "Cristóbal sube al escenario con micrófono.",
-          "Luz fija al centro del escenario.",
-        ],
-      },
-      {
         heading: "Saludo inicial",
         lines: [
           "Buenas tardes a todos. Bienvenidos a los Graphē Awards 2026.",
-          "Gracias a alumnos, familias, maestros y al jurado que hicieron posible esta primera edición.",
-          "Esta noche celebramos el trabajo de los mejores proyectos del LDGD de este semestre.",
+          "Gracias a alumnos, familias, maestros y al jurado que hicieron posible esta segunda edición.",
+          "Esta noche celebramos el trabajo de los mejores proyectos del LDG de este semestre.",
+        ],
+      },
+      {
+        heading: "La filosofía de la edición",
+        lines: [
+          "Esta segunda edición de Graphē tiene una idea detrás.",
+          "Una que ya vieron en el video.",
+          "Que equivocarse también es diseñar.",
+          "Que todo lo que ven aquí esta noche — los 21 proyectos nominados — son el resultado de cientos de versiones, errores, regresos, dudas y decisiones.",
+          "Y que cada uno de ellos llegó hasta aquí porque alguien decidió arriesgarse.",
         ],
       },
       {
         heading: "Sobre Graphē",
         lines: [
-          "Graphē nace de la convicción de que el diseño transforma realidades.",
-          "Estos premios reconocen siete categorías que cubren todas las disciplinas del diseño gráfico contemporáneo.",
-          "Cada proyecto nominado fue seleccionado por un jurado profesional que evaluó Concepto, Ejecución, Innovación e Impacto.",
+          "Graphē reconoce siete categorías que cubren todas las disciplinas del diseño gráfico contemporáneo.",
+          "Cada proyecto fue evaluado por un jurado profesional sobre Concepto, Ejecución, Innovación e Impacto.",
         ],
       },
       {
         heading: "Agradecimientos",
         lines: [
           "Gracias a la UDEM por el apoyo institucional.",
-          "Gracias al jurado: Nacho Cadena, Giovanni, Jessica Ochoa y todos los que donaron su tiempo.",
-          "Y gracias a Melissa, quien conducirá la ceremonia esta noche.",
+          "Gracias al jurado: Álex López, Nacho Cadena, Eduardo Guizar, Marcelo Seltzer, Vicky González, Marbella y Jessica Ochoa.",
+          "Y gracias a Melissa, quien va a conducir la ceremonia esta noche.",
         ],
       },
       {
-        heading: "Transición a Nacho Cadena",
+        heading: "Transición a Nacho",
         lines: [
-          "Antes de comenzar con las premiaciones, quiero ceder el escenario a alguien especial.",
-          "Un referente del diseño mexicano, invitado de honor de esta primera edición.",
+          "Antes de comenzar con las premiaciones, quiero ceder el escenario a alguien que entiende mejor que nadie lo que significa atreverse.",
+          "Un referente del diseño mexicano, invitado de honor de esta segunda edición.",
           "Con ustedes: Nacho Cadena.",
         ],
       },
     ],
     cues: [
-      "Staff A: bajar música al entrar Cristóbal",
-      "Staff B: preparar proyector para Nacho Cadena",
-      "Melissa: esperar en backstage",
+      "Staff A: luz fija al centro del escenario",
+      "Staff B: pantalla con logo Graphē estático",
     ],
   },
   {
     id: "nacho",
-    start: "5:10 PM",
-    durationMin: 20,
+    start: "5:23 PM",
+    durationMin: 18,
     type: "talk",
     title: "Ponencia: Nacho Cadena",
     subtitle: "Invitado de honor",
@@ -93,78 +223,104 @@ const SECTIONS: Section[] = [
     color: "#C63527",
     script: [
       {
-        heading: "Presentación",
+        heading: "Acción",
         lines: [
-          "Cristóbal presenta brevemente a Nacho y le cede el micrófono.",
-          "Nacho sube al escenario mientras Cristóbal baja.",
-        ],
-      },
-      {
-        heading: "Ponencia (20 min)",
-        lines: [
-          "Nacho dará una charla sobre diseño, disciplina y carrera creativa.",
-          "Tema libre — él tiene su presentación lista.",
-          "Staff B controla proyector si Nacho pidió slides.",
-        ],
-      },
-      {
-        heading: "Cierre de ponencia",
-        lines: [
-          "Al terminar, aplausos.",
-          "Nacho se queda en el escenario o baja al público (según prefiera).",
-          "Melissa sube al escenario.",
+          "Cristóbal cede el mic.",
+          "Nacho da su ponencia (tema libre — diseño, carrera, disciplina).",
+          "Al terminar: aplausos.",
+          "IMPORTANTE: Nacho NO baja del escenario — se queda para la firma de convenio.",
         ],
       },
     ],
     cues: [
       "Staff B: avanzar slides si Nacho usa presentación",
-      "Staff A: control de luces (foco en ponente)",
-      "Melissa: preparar en backstage durante ponencia",
+      "Staff A: foco en el ponente",
+    ],
+  },
+  {
+    id: "firma-convenio",
+    start: "5:41 PM",
+    durationMin: 7,
+    type: "signing",
+    title: "Firma de convenio E+C® × UDEM",
+    subtitle: "Convenio de prácticas profesionales",
+    lead: "Nacho Cadena + Jessica Ochoa + Eduardo Guizar",
+    color: "#008755",
+    script: [
+      {
+        heading: "Contexto",
+        lines: [
+          "Convenio entre E+C® (Nacho Cadena) y la UDEM sobre prácticas profesionales para alumnos del LDG.",
+        ],
+      },
+      {
+        heading: "Cristóbal presenta el momento",
+        lines: [
+          "Cristóbal regresa al mic.",
+          "\"Antes de continuar, vamos a vivir un momento muy importante para el LDG.\"",
+          "\"Hoy firmamos un convenio entre E+C® y la UDEM que abrirá oportunidades de prácticas profesionales para nuestros alumnos.\"",
+          "\"Para hacer la firma oficial, suben al escenario nuestra Decana Jessica Ochoa Zamarripa y nuestro DDA, Eduardo Guizar.\"",
+        ],
+      },
+      {
+        heading: "Acción de firma",
+        lines: [
+          "Jessica Ochoa y Eduardo Guizar suben al escenario.",
+          "Los tres (Nacho, Jessica, Eduardo) se acercan a la mesa de firma.",
+          "Firma: Nacho → Jessica → Eduardo.",
+          "Foto oficial con los documentos firmados.",
+          "Foto adicional: apretón de manos / abrazo entre los tres.",
+        ],
+      },
+      {
+        heading: "Cierre del momento",
+        lines: [
+          "Cristóbal: \"Un aplauso para este nuevo convenio que va a impactar directamente a los alumnos del LDG. Gracias a Nacho, a Jessica y a Eduardo.\"",
+          "Los tres bajan del escenario. Melissa entra.",
+        ],
+      },
+    ],
+    cues: [
+      "Staff B: proyectar 'FIRMA DE CONVENIO · E+C® × UDEM · PRÁCTICAS PROFESIONALES' + logos",
+      "Staff A: luz amplia al escenario para 3 personas",
+      "Mesa de firma con documentos y plumas lista al centro",
+      "Fotógrafo oficial al frente",
     ],
   },
   {
     id: "video-nominados",
-    start: "5:30 PM",
+    start: "5:48 PM",
     durationMin: 5,
     type: "video",
     title: "Video de nominados",
-    subtitle: "Presentación de los 7 proyectos por categoría",
-    lead: "Proyección",
+    subtitle: "Presentación de los 21 proyectos",
+    lead: "Pantalla",
     color: "#7C6992",
     script: [
       {
-        heading: "Antes del video",
+        heading: "Melissa entra y dice",
         lines: [
-          "Melissa ya está en el escenario después de la ponencia.",
-          "Saluda brevemente al público (30 segundos máx):",
           "\"Buenas tardes, soy Melissa y tengo el honor de acompañarlos esta noche en los Graphē Awards 2026.\"",
-          "\"Antes de comenzar con las premiaciones, veamos a los nominados de esta primera edición.\"",
+          "\"Antes de comenzar con las premiaciones, veamos a los nominados de esta segunda edición.\"",
         ],
       },
       {
         heading: "Proyección",
         lines: [
-          "Staff B lanza el video de nominados.",
+          "Se lanza video-nominados.mp4.",
           "Luces bajas, pantalla encendida.",
-          "Duración aproximada 5 minutos.",
-        ],
-      },
-      {
-        heading: "Al terminar el video",
-        lines: [
-          "Luces suben a nivel escenario.",
-          "Melissa regresa al micrófono para iniciar la primera premiación.",
+          "Al terminar: luces suben, Melissa al mic.",
         ],
       },
     ],
     cues: [
-      "Staff B: video-nominados.mp4 en pantalla",
-      "Staff A: luces bajas durante video, suben al terminar",
+      "Staff B: video-nominados.mp4",
+      "Staff A: luces bajas durante video",
     ],
   },
   {
     id: "premio-fotografia",
-    start: "5:35 PM",
+    start: "5:53 PM",
     durationMin: 8,
     type: "award",
     title: "Premio: Fotografía",
@@ -173,59 +329,53 @@ const SECTIONS: Section[] = [
     color: "#FFB3AB",
     script: [
       {
-        heading: "Introducción a la categoría",
+        heading: "Introducción",
         lines: [
           "\"Comenzamos con la categoría de Fotografía.\"",
           "\"La fotografía es el arte de capturar la luz y contar historias a través de una sola imagen.\"",
-          "\"En esta categoría, el jurado evaluó la mirada, la composición y la narrativa visual de cada pieza.\"",
+          "\"El jurado evaluó la mirada, la composición y la narrativa visual de cada pieza.\"",
         ],
       },
       {
-        heading: "Presentación de nominados",
+        heading: "Nominados",
         lines: [
           "\"Los nominados en Fotografía son:\"",
-          "Staff B proyecta imágenes de los nominados en pantalla mientras Melissa los menciona uno por uno.",
-          "\"[NOMBRE 1] con el proyecto [PROYECTO 1]\"",
-          "\"[NOMBRE 2] con el proyecto [PROYECTO 2]\"",
-          "\"[NOMBRE 3] con el proyecto [PROYECTO 3]\"",
+          "\"Cecilia Abigail Ginez Benavides con 'Not Your Business'\"",
+          "\"Andrea Paola Hernández Tamez con 'Merch Agencia BackDoor'\"",
+          "\"Nicolas González con 'Alto Desempeño LDG'\"",
+          "\"Un aplauso para los tres.\"",
         ],
       },
       {
         heading: "Anuncio del ganador",
         lines: [
-          "Pausa dramática — Melissa abre el sobre.",
-          "\"Y el Graphē Award en la categoría de Fotografía es para...\"",
-          "Pausa (3 segundos).",
-          "\"[NOMBRE GANADOR] por el proyecto [PROYECTO GANADOR].\"",
-          "Aplausos. Staff B proyecta el proyecto ganador en pantalla.",
+          "\"Y el Graphē Award en Fotografía es para…\"",
+          "(pausa 3 segundos)",
+          "\"Andrea Paola Hernández Tamez por 'Merch Agencia BackDoor'.\"",
         ],
       },
       {
-        heading: "Entrega del premio",
+        heading: "Entrega",
         lines: [
-          "El ganador sube al escenario.",
-          "Cristóbal o presentador designado entrega el trofeo.",
-          "Foto rápida. NO se le pide discurso.",
-          "El ganador baja del escenario. Aplausos de salida.",
+          "Andrea sube al escenario.",
+          "Cristóbal entrega el trofeo.",
+          "Foto rápida — NO discurso.",
+          "Andrea baja.",
         ],
       },
       {
-        heading: "Transición a siguiente categoría",
-        lines: [
-          "\"Un aplauso para [NOMBRE GANADOR]. Enhorabuena.\"",
-          "\"Continuamos con la siguiente categoría...\"",
-        ],
+        heading: "Transición",
+        lines: ["\"Un aplauso para Andrea. Continuamos con la siguiente categoría…\""],
       },
     ],
     cues: [
-      "Staff B: slides de nominados Fotografía, luego proyecto ganador",
-      "Staff A: luz al escenario durante entrega",
-      "Trofeo de Fotografía listo en mesa de premios",
+      "Staff B: slides de los 3 nominados",
+      "Trofeo de Fotografía listo",
     ],
   },
   {
     id: "premio-ilustracion",
-    start: "5:43 PM",
+    start: "6:01 PM",
     durationMin: 8,
     type: "award",
     title: "Premio: Ilustración",
@@ -234,55 +384,43 @@ const SECTIONS: Section[] = [
     color: "#008755",
     script: [
       {
-        heading: "Introducción a la categoría",
+        heading: "Introducción",
         lines: [
-          "\"Seguimos con la categoría de Ilustración.\"",
-          "\"La ilustración es pensamiento visual en su forma más libre — donde la imaginación construye mundos que la fotografía no puede.\"",
+          "\"Seguimos con Ilustración — pensamiento visual en su forma más libre.\"",
           "\"El jurado buscó propuestas con voz propia, técnica sólida y narrativas memorables.\"",
         ],
       },
       {
-        heading: "Presentación de nominados",
+        heading: "Nominados",
         lines: [
-          "\"Los nominados en Ilustración son:\"",
-          "Staff B proyecta imágenes de los nominados.",
-          "\"[NOMBRE 1] con [PROYECTO 1]\"",
-          "\"[NOMBRE 2] con [PROYECTO 2]\"",
-          "\"[NOMBRE 3] con [PROYECTO 3]\"",
+          "\"Los nominados son:\"",
+          "\"Fátima Robledo Pérez y Melissa Carolina Sánchez Torres con 'Discovering Madrid'\"",
+          "\"Anakaren Basurto Orozco, Cecilia Abigail Ginez Benavides y Ana Paula Lugo Arroyo con 'Tu sí puedes'\"",
+          "\"Natalia Núñez Rodríguez con 'Daruma'\"",
         ],
       },
       {
         heading: "Anuncio del ganador",
         lines: [
-          "\"Y el Graphē Award en Ilustración es para...\"",
-          "Pausa (3 segundos).",
-          "\"[NOMBRE GANADOR] por [PROYECTO GANADOR].\"",
-          "Aplausos. Proyecto ganador en pantalla.",
+          "\"Y el Graphē Award en Ilustración es para…\"",
+          "(pausa)",
+          "\"Fátima Robledo Pérez y Melissa Carolina Sánchez Torres por 'Discovering Madrid'.\"",
         ],
       },
       {
-        heading: "Entrega del premio",
-        lines: [
-          "Ganador sube al escenario. Entrega del trofeo.",
-          "Foto rápida. NO discurso.",
-          "Baja del escenario.",
-        ],
+        heading: "Entrega",
+        lines: ["Suben las dos, trofeo, foto, bajan."],
       },
       {
         heading: "Transición",
-        lines: [
-          "\"Muchas felicidades a [NOMBRE GANADOR]. Vamos con la tercera categoría...\"",
-        ],
+        lines: ["\"Felicidades a Fátima y Melissa. Vamos con la tercera…\""],
       },
     ],
-    cues: [
-      "Staff B: slides de nominados Ilustración",
-      "Trofeo de Ilustración listo",
-    ],
+    cues: ["Staff B: slides Ilustración", "Trofeo Ilustración listo"],
   },
   {
     id: "premio-logotipo",
-    start: "5:51 PM",
+    start: "6:09 PM",
     durationMin: 8,
     type: "award",
     title: "Premio: Logotipo",
@@ -291,53 +429,43 @@ const SECTIONS: Section[] = [
     color: "#305379",
     script: [
       {
-        heading: "Introducción a la categoría",
+        heading: "Introducción",
         lines: [
           "\"La categoría de Logotipo premia la síntesis perfecta — comunicar una marca completa en un solo símbolo.\"",
           "\"El jurado evaluó memorabilidad, originalidad y pertinencia con la marca representada.\"",
         ],
       },
       {
-        heading: "Presentación de nominados",
+        heading: "Nominados",
         lines: [
-          "\"Los nominados en Logotipo son:\"",
-          "Staff B proyecta los logos.",
-          "\"[NOMBRE 1] — [PROYECTO 1]\"",
-          "\"[NOMBRE 2] — [PROYECTO 2]\"",
-          "\"[NOMBRE 3] — [PROYECTO 3]\"",
+          "\"Los nominados son:\"",
+          "\"Natalia Lozano Garza y Ana Lucía Herrera con 'María Plancarte'\"",
+          "\"Melisa Vargas Sepúlveda y Aurora del Campo con 'Habitante'\"",
+          "\"Anna Ferrer, Sofía Jiménez, Isela Wu y Ana Valeria Pérez con 'Known By'\"",
         ],
       },
       {
         heading: "Anuncio del ganador",
         lines: [
-          "\"Y el Graphē Award en Logotipo es para...\"",
-          "Pausa.",
-          "\"[NOMBRE GANADOR] por [PROYECTO GANADOR].\"",
-          "Aplausos. Logo ganador en pantalla.",
+          "\"Y el Graphē Award en Logotipo es para…\"",
+          "(pausa)",
+          "\"Melisa Vargas Sepúlveda y Aurora del Campo por 'Habitante'.\"",
         ],
       },
       {
         heading: "Entrega",
-        lines: [
-          "Ganador sube, recibe trofeo, foto, baja.",
-          "Sin discurso.",
-        ],
+        lines: ["Suben, trofeo, foto, bajan."],
       },
       {
         heading: "Transición",
-        lines: [
-          "\"Felicidades a [NOMBRE GANADOR]. Continuamos...\"",
-        ],
+        lines: ["\"Felicidades a Melisa y Aurora. Continuamos…\""],
       },
     ],
-    cues: [
-      "Staff B: slides Logotipo",
-      "Trofeo de Logotipo listo",
-    ],
+    cues: ["Staff B: slides Logotipo", "Trofeo Logotipo listo"],
   },
   {
     id: "premio-producto",
-    start: "5:59 PM",
+    start: "6:17 PM",
     durationMin: 8,
     type: "award",
     title: "Premio: Producto",
@@ -346,51 +474,43 @@ const SECTIONS: Section[] = [
     color: "#DB6B30",
     script: [
       {
-        heading: "Introducción a la categoría",
+        heading: "Introducción",
         lines: [
           "\"Llegamos a Producto — donde el diseño se vuelve tangible, funcional, usable.\"",
           "\"Aquí se evaluó la intersección entre forma, función y fabricación.\"",
         ],
       },
       {
-        heading: "Presentación de nominados",
+        heading: "Nominados",
         lines: [
-          "\"Los nominados en Producto son:\"",
-          "\"[NOMBRE 1] — [PROYECTO 1]\"",
-          "\"[NOMBRE 2] — [PROYECTO 2]\"",
-          "\"[NOMBRE 3] — [PROYECTO 3]\"",
+          "\"Los nominados son:\"",
+          "\"Itzel Rivera Elizondo, Andrea Hernández, Alejandro Escobedo y Kenia González con 'Descubre al cuatroojos'\"",
+          "\"Ana Lucía Recio y Ana Lucía Herrera con 'Tin & Tan'\"",
+          "\"Ana Valeria Pérez Lagunas, Anna Ferrer, Isela Wu y Sofía Jiménez con 'Puntos de Conexión'\"",
         ],
       },
       {
         heading: "Anuncio del ganador",
         lines: [
-          "\"El Graphē Award en Producto es para...\"",
-          "Pausa.",
-          "\"[NOMBRE GANADOR] por [PROYECTO GANADOR].\"",
-          "Aplausos.",
+          "\"Y el Graphē Award en Producto es para…\"",
+          "(pausa)",
+          "\"Ana Valeria Pérez Lagunas, Anna Ferrer, Isela Wu y Sofía Jiménez por 'Puntos de Conexión'.\"",
         ],
       },
       {
         heading: "Entrega",
-        lines: [
-          "Ganador sube, recibe trofeo, foto, baja.",
-        ],
+        lines: ["Suben las cuatro, trofeo, foto grupal, bajan."],
       },
       {
         heading: "Transición",
-        lines: [
-          "\"Un aplauso para [NOMBRE GANADOR]. Seguimos...\"",
-        ],
+        lines: ["\"Un aplauso para el equipo de Puntos de Conexión. Seguimos…\""],
       },
     ],
-    cues: [
-      "Staff B: slides Producto",
-      "Trofeo de Producto listo",
-    ],
+    cues: ["Staff B: slides Producto", "Trofeo Producto listo"],
   },
   {
     id: "premio-empaque",
-    start: "6:07 PM",
+    start: "6:25 PM",
     durationMin: 8,
     type: "award",
     title: "Premio: Empaque",
@@ -399,50 +519,43 @@ const SECTIONS: Section[] = [
     color: "#7C6992",
     script: [
       {
-        heading: "Introducción a la categoría",
+        heading: "Introducción",
         lines: [
           "\"En Empaque, el diseño pasa por tus manos cada día.\"",
           "\"Se premió la integración de marca, estructura y mensaje en una sola pieza física.\"",
         ],
       },
       {
-        heading: "Presentación de nominados",
+        heading: "Nominados",
         lines: [
-          "\"Los nominados en Empaque son:\"",
-          "\"[NOMBRE 1] — [PROYECTO 1]\"",
-          "\"[NOMBRE 2] — [PROYECTO 2]\"",
-          "\"[NOMBRE 3] — [PROYECTO 3]\"",
+          "\"Los nominados son:\"",
+          "\"Fátima Robledo Pérez y Melissa Carolina Sánchez Torres con 'Discovering Madrid'\"",
+          "\"Miranda Salazar Gutiérrez y Natalia Núñez Rodríguez con 'Camilia'\"",
+          "\"Anakaren Basurto Orozco con 'Crazy Pin'\"",
         ],
       },
       {
         heading: "Anuncio del ganador",
         lines: [
-          "\"Y el Graphē Award en Empaque es para...\"",
-          "Pausa.",
-          "\"[NOMBRE GANADOR] por [PROYECTO GANADOR].\"",
+          "\"Y el Graphē Award en Empaque es para…\"",
+          "(pausa)",
+          "\"Miranda Salazar Gutiérrez y Natalia Núñez Rodríguez por 'Camilia'.\"",
         ],
       },
       {
         heading: "Entrega",
-        lines: [
-          "Ganador sube, trofeo, foto, baja.",
-        ],
+        lines: ["Suben, trofeo, foto, bajan."],
       },
       {
         heading: "Transición",
-        lines: [
-          "\"Felicidades a [NOMBRE GANADOR]. Quedan dos categorías...\"",
-        ],
+        lines: ["\"Felicidades a Miranda y Natalia. Quedan dos categorías…\""],
       },
     ],
-    cues: [
-      "Staff B: slides Empaque",
-      "Trofeo de Empaque listo",
-    ],
+    cues: ["Staff B: slides Empaque", "Trofeo Empaque listo"],
   },
   {
     id: "premio-editorial",
-    start: "6:15 PM",
+    start: "6:33 PM",
     durationMin: 8,
     type: "award",
     title: "Premio: Editorial",
@@ -451,185 +564,196 @@ const SECTIONS: Section[] = [
     color: "#00594F",
     script: [
       {
-        heading: "Introducción a la categoría",
+        heading: "Introducción",
         lines: [
           "\"Editorial es el reino del diseñador gráfico clásico — la tipografía, la retícula, el ritmo de la página.\"",
           "\"Se evaluó composición, jerarquía visual y coherencia a lo largo de toda la pieza.\"",
         ],
       },
       {
-        heading: "Presentación de nominados",
+        heading: "Nominados",
         lines: [
-          "\"Los nominados en Editorial son:\"",
-          "\"[NOMBRE 1] — [PROYECTO 1]\"",
-          "\"[NOMBRE 2] — [PROYECTO 2]\"",
-          "\"[NOMBRE 3] — [PROYECTO 3]\"",
+          "\"Los nominados son:\"",
+          "\"Ariana Sofía López Rodríguez, Joselyn Ximena Ibarra Quiroga y Fernando Marcos Ibarra Flores con 'Ruta del Arte en Nueva York'\"",
+          "\"Anakaren Basurto Orozco, Cecilia Abigail Ginez Benavides y Ana Paula Lugo Arroyo con 'Tu sí puedes'\"",
+          "\"Melisa Vargas Sepúlveda con 'Vértice Magazine'\"",
         ],
       },
       {
         heading: "Anuncio del ganador",
         lines: [
-          "\"El Graphē Award en Editorial es para...\"",
-          "Pausa.",
-          "\"[NOMBRE GANADOR] por [PROYECTO GANADOR].\"",
+          "\"Y el Graphē Award en Editorial es para…\"",
+          "(pausa)",
+          "\"Anakaren Basurto Orozco, Cecilia Abigail Ginez Benavides y Ana Paula Lugo Arroyo por 'Tu sí puedes'.\"",
         ],
       },
       {
         heading: "Entrega",
-        lines: [
-          "Ganador sube, trofeo, foto, baja.",
-        ],
+        lines: ["Suben las tres, trofeo, foto grupal, bajan."],
       },
       {
         heading: "Transición a la última categoría",
-        lines: [
-          "\"Felicidades a [NOMBRE GANADOR]. Y llegamos a la última categoría de la noche...\"",
-        ],
+        lines: ["\"Felicidades al equipo de Tu sí puedes. Y llegamos a la última categoría de la noche…\""],
       },
     ],
-    cues: [
-      "Staff B: slides Editorial",
-      "Trofeo de Editorial listo",
-    ],
+    cues: ["Staff B: slides Editorial", "Trofeo Editorial listo"],
   },
   {
     id: "premio-digital",
-    start: "6:23 PM",
+    start: "6:41 PM",
     durationMin: 8,
     type: "award",
     title: "Premio: Digital",
-    subtitle: "Categoría 7 de 7 — final",
+    subtitle: "Categoría 7 de 7 — última",
     lead: "Melissa",
     color: "#C63527",
     script: [
       {
-        heading: "Introducción a la categoría",
+        heading: "Introducción",
         lines: [
           "\"Cerramos con Digital — la categoría donde el diseño se vuelve interacción, movimiento, código.\"",
           "\"El jurado evaluó experiencia, usabilidad e innovación técnica.\"",
         ],
       },
       {
-        heading: "Presentación de nominados",
+        heading: "Nominados",
         lines: [
-          "\"Los nominados en Digital son:\"",
-          "\"[NOMBRE 1] — [PROYECTO 1]\"",
-          "\"[NOMBRE 2] — [PROYECTO 2]\"",
-          "\"[NOMBRE 3] — [PROYECTO 3]\"",
+          "\"Los nominados son:\"",
+          "\"Ana Paula Lugo Arroyo, Fernanda Daniela Lomeli Martínez, Esbeidy Yanett Cabrera Yáñez y María Fernanda Martínez Rodríguez con 'Santiago Restaurant Week'\"",
+          "\"Santiago Mateo Díaz Sánchez con 'Oneiro Creative Studio'\"",
+          "\"Ana Yamilette Salas Hernández, Mariana Luna Preciado, Sofía Magdalena Elizondo Caballero y Sara Abril Ponce Pinto con 'Sin Prispas No Hay Chispa'\"",
         ],
       },
       {
         heading: "Anuncio del ganador",
         lines: [
-          "\"Y el último Graphē Award de la noche, en Digital, es para...\"",
-          "Pausa.",
-          "\"[NOMBRE GANADOR] por [PROYECTO GANADOR].\"",
-          "Aplausos largos — es el último premio.",
+          "\"Y el último Graphē Award de la noche, en Digital, es para…\"",
+          "(pausa larga)",
+          "\"Santiago Mateo Díaz Sánchez por 'Oneiro Creative Studio'.\"",
         ],
       },
       {
         heading: "Entrega",
         lines: [
-          "Ganador sube, trofeo, foto, baja.",
-        ],
-      },
-      {
-        heading: "Cierre de la premiación",
-        lines: [
-          "\"Felicidades a [NOMBRE GANADOR] y a todos los ganadores de esta primera edición.\"",
-          "\"Antes de cerrar, quiero agradecerles a todos por estar aquí esta noche.\"",
-          "Transición a cierre oficial.",
+          "Sube Santiago, trofeo, foto, baja.",
+          "Melissa NO baja del escenario — entra directo al cierre.",
         ],
       },
     ],
     cues: [
-      "Staff B: slides Digital",
-      "Trofeo de Digital listo (último)",
-      "Preparar video de cierre",
+      "Staff B: slides Digital + PREPARAR video-cierre.mp4",
+      "Trofeo Digital listo (último)",
     ],
   },
   {
-    id: "cierre",
-    start: "6:31 PM",
-    durationMin: 19,
+    id: "cierre-melissa",
+    start: "6:49 PM",
+    durationMin: 6,
     type: "closing",
-    title: "Cierre y palabras finales",
-    subtitle: "Cristóbal regresa al escenario",
-    lead: "Cristóbal Guerra",
-    color: "#FFA400",
+    title: "Cierre — Melissa",
+    subtitle: "Filosofía + invitación a networking",
+    lead: "Melissa",
+    color: "#FFB3AB",
     script: [
       {
-        heading: "Melissa cede el micrófono",
+        heading: "Reconocimiento a TODOS los participantes",
         lines: [
-          "Melissa: \"Para cerrar esta primera edición, regresa Cristóbal Guerra.\"",
-          "Cristóbal sube al escenario.",
+          "\"Esta noche premiamos a 7 proyectos.\"",
+          "\"Pero fueron 21 los que llegaron a esta final.\"",
+          "\"Y detrás de esos 21 proyectos hay más de 35 personas que trabajaron, iteraron y se arriesgaron.\"",
+          "\"Un aplauso enorme para todos ellos — los que ganaron, y los que estuvieron en la lista.\"",
         ],
       },
       {
-        heading: "Agradecimiento a los ganadores y nominados",
+        heading: "Volver a la tesis",
         lines: [
-          "\"Felicidades a los siete ganadores de esta noche.\"",
-          "\"Y especialmente a todos los nominados — ustedes ya son parte de la historia de Graphē.\"",
-          "\"Cada proyecto que vimos esta noche es el resultado de meses de trabajo, iteración y valentía.\"",
+          "\"Lo que vieron esta noche no fueron 21 proyectos perfectos.\"",
+          "\"Fueron 21 proyectos que se atrevieron.\"",
+          "\"Que probaron, fallaron, regresaron, intentaron de nuevo.\"",
+          "\"Porque eso es lo que está detrás de cualquier cosa que valga la pena.\"",
+          "\"Esta segunda edición de Graphē tiene una sola idea:\"",
+          "\"Equivocarse también es diseñar.\"",
+          "\"Y este premio no es para los que llegaron sin tropezar.\"",
+          "\"Es para los que decidieron seguir aunque no supieran cómo iba a salir.\"",
         ],
       },
       {
-        heading: "Reflexión de cierre",
+        heading: "Invitación a la generación",
         lines: [
-          "\"Graphē Awards nació con la intención de celebrar el diseño hecho en el LDGD.\"",
-          "\"Pero también con la intención de generar un estándar — uno exigente, uno que los empuje a dar más.\"",
-          "\"Esta primera edición cumplió esa misión. Y confirma que el talento en este programa es real.\"",
-          "\"Gracias a cada persona que creyó en este proyecto desde el primer día.\"",
+          "\"Ese es el LDG. Esa es la generación que está en este cuarto.\"",
+          "\"Y esa es la invitación que les dejamos esta noche:\"",
+          "\"Atrévanse. Arriésguense. Busquen formas nuevas de hacer las cosas.\"",
+          "\"Porque los proyectos que cambian al diseño nacen del que se equivoca primero.\"",
         ],
       },
       {
-        heading: "Invitación al video de cierre",
+        heading: "Invitación a networking + playeras",
         lines: [
-          "\"Antes de despedirnos, les dejo un último video.\"",
-          "\"Es un resumen de esta primera edición. De lo que construimos juntos.\"",
-          "\"Muchas gracias y buenas noches.\"",
-          "Cristóbal baja del escenario. Luces bajan.",
+          "\"Antes de despedirnos: afuera tenemos aperitivos y un espacio para que sigamos conviviendo.\"",
+          "\"También pueden recoger sus playeras intervenidas del pre-evento — están en la mesa de afuera con su nombre.\"",
+          "\"Quédense, conózcanse, sigan haciendo conexiones — porque eso también es parte de Graphē.\"",
+          "\"Gracias por estar aquí. Buenas noches.\"",
+        ],
+      },
+      {
+        heading: "Salida",
+        lines: [
+          "Melissa baja del escenario.",
+          "Inmediatamente las luces bajan.",
+          "SIN PAUSA, arranca el video de créditos (sin anuncio).",
         ],
       },
     ],
     cues: [
-      "Staff B: preparar video de cierre",
-      "Staff A: luces bajas para transición al video",
-      "Trofeos ya todos entregados",
+      "Staff A: luz suave, íntima, al centro de Melissa",
+      "Staff B: al final de Melissa, SIN ANUNCIO, lanzar video-cierre.mp4 (tipo créditos post-película)",
     ],
   },
   {
-    id: "video-cierre",
-    start: "6:50 PM",
-    durationMin: 10,
+    id: "video-creditos",
+    start: "6:55 PM",
+    durationMin: 5,
     type: "video",
-    title: "Video de cierre",
-    subtitle: "Proyección final — recap de la noche",
-    lead: "Proyección",
+    title: "Video créditos",
+    subtitle: "Post-credits sin anuncio",
+    lead: "Pantalla",
     color: "#7C6992",
     script: [
       {
-        heading: "Proyección",
+        heading: "Concepto",
         lines: [
-          "Staff B lanza el video de cierre.",
-          "Luces totalmente bajas, pantalla encendida.",
-          "Duración aproximada 5-10 minutos.",
+          "Sin anuncio previo — corre solo después de Melissa.",
+          "Tipo créditos post-película.",
+          "Música suave de cierre, instrumental contemplativa.",
+          "Lista todos los nominados, jurado, staff.",
+        ],
+      },
+      {
+        heading: "Estructura del video",
+        lines: [
+          "GRAPHĒ AWARDS 2026 · SEGUNDA EDICIÓN",
+          "JURADO (7 nombres)",
+          "NOMINADOS por categoría (todos los integrantes de equipo)",
+          "INVITADO DE HONOR · Nacho Cadena",
+          "HOST · Melissa",
+          "DIRECCIÓN · Cristóbal Guerra",
+          "PRODUCCIÓN · Staff Graphē Awards",
+          "Cierra con: 'EQUIVOCARSE TAMBIÉN ES DISEÑAR. GRAPHĒ AWARDS 2026 · LDG · UDEM'",
         ],
       },
       {
         heading: "Fin del evento",
         lines: [
-          "Al terminar el video, luces suben lentamente.",
-          "Música suave de fondo.",
-          "Se invita al público a un coctel o networking (si aplica).",
-          "Fin oficial de la ceremonia.",
+          "Al terminar el video: luces suben gradualmente.",
+          "Música ambiental para networking.",
+          "Networking + entrega de playeras intervenidas: 7:00 PM en adelante (afuera).",
         ],
       },
     ],
     cues: [
-      "Staff B: video-cierre.mp4 en pantalla",
-      "Staff A: luces bajas durante video, suben al terminar",
-      "Preparar logística post-evento",
+      "Staff B: video-cierre.mp4 corre solo (sin anuncio)",
+      "Staff A: luces totalmente bajas durante video, suben al terminar",
+      "Música ambiental para post-evento lista",
     ],
   },
 ];
@@ -659,6 +783,8 @@ function typeIcon(type: SectionType) {
     case "video": return Video;
     case "award": return Award;
     case "closing": return Sparkles;
+    case "preevent": return Shirt;
+    case "signing": return FileSignature;
     default: return Clock;
   }
 }
@@ -727,7 +853,6 @@ export default function AgendaPage() {
   }
 
   // ─── Progress computation ───────────────────────────────────────────────────
-  const startBase = parseStart("5:00 PM");
   let currentIdx = -1;
   if (running) {
     const elapsedMin = elapsedSec / 60;
@@ -759,8 +884,9 @@ export default function AgendaPage() {
       <div className="sticky top-0 z-40 bg-[#0a0a09]/95 backdrop-blur-sm border-b border-white/[0.06]">
         <div className="max-w-4xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase">Graphē Awards 2026</p>
+            <p className="text-white/30 text-[10px] tracking-[0.2em] uppercase">Graphē Awards 2026 · 2ª edición</p>
             <h1 className="text-white font-bold text-lg">Agenda ceremonia · 29 abril</h1>
+            <p className="text-[#FFA400]/80 text-[11px] mt-0.5 italic">"Equivocarse también es diseñar."</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -911,8 +1037,9 @@ export default function AgendaPage() {
       </div>
 
       {/* Footer */}
-      <div className="max-w-4xl mx-auto px-4 pt-10 text-center">
-        <p className="text-white/20 text-[10px] tracking-[0.2em] uppercase">Fin · 7:00 PM</p>
+      <div className="max-w-4xl mx-auto px-4 pt-10 text-center space-y-1">
+        <p className="text-white/20 text-[10px] tracking-[0.2em] uppercase">Networking + playeras · 7:00 PM en adelante</p>
+        <p className="text-white/15 text-[9px] italic">Equivocarse también es diseñar.</p>
       </div>
     </div>
   );
