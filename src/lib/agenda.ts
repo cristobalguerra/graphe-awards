@@ -36,9 +36,18 @@ export interface AgendaDoc {
   updatedAt?: Timestamp | null;
 }
 
+// ─── Shared Timer Types ──────────────────────────────────────────────────────
+
+export interface TimerState {
+  running: boolean;
+  pausedAtSec: number;       // seconds elapsed at last pause
+  startedAt: Timestamp | null; // when running was last (re)started
+}
+
 // ─── Firestore I/O ───────────────────────────────────────────────────────────
 
 const AGENDA_DOC_PATH = "agenda/main";
+const TIMER_DOC_PATH = "agenda/timer";
 
 export function subscribeAgenda(
   cb: (doc: AgendaDoc | null) => void
@@ -63,6 +72,47 @@ export async function saveAgenda(sections: AgendaSection[]): Promise<void> {
   await setDoc(doc(db, AGENDA_DOC_PATH), {
     sections,
     updatedAt: Timestamp.now(),
+  });
+}
+
+// ─── Shared Timer ────────────────────────────────────────────────────────────
+
+export function subscribeTimer(cb: (state: TimerState) => void): () => void {
+  return onSnapshot(doc(db, TIMER_DOC_PATH), (snap) => {
+    if (!snap.exists()) {
+      cb({ running: false, pausedAtSec: 0, startedAt: null });
+      return;
+    }
+    const data = snap.data();
+    cb({
+      running: !!data.running,
+      pausedAtSec: data.pausedAtSec || 0,
+      startedAt: data.startedAt || null,
+    });
+  });
+}
+
+export async function startTimer(resumeFromSec: number): Promise<void> {
+  await setDoc(doc(db, TIMER_DOC_PATH), {
+    running: true,
+    pausedAtSec: resumeFromSec,
+    startedAt: Timestamp.now(),
+  });
+}
+
+export async function pauseTimer(currentElapsedSec: number): Promise<void> {
+  await setDoc(doc(db, TIMER_DOC_PATH), {
+    running: false,
+    pausedAtSec: currentElapsedSec,
+    startedAt: null,
+  });
+}
+
+export async function resetTimer(): Promise<void> {
+  await setDoc(doc(db, TIMER_DOC_PATH), {
+    running: false,
+    pausedAtSec: 0,
+    startedAt: null,
   });
 }
 

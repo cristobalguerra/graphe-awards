@@ -6,8 +6,9 @@ import {
   Shirt, FileSignature, Pencil, Save, Plus, X, Check, Loader2,
 } from "lucide-react";
 import {
-  AgendaSection, SectionType, DEFAULT_SECTIONS,
+  AgendaSection, SectionType, DEFAULT_SECTIONS, TimerState,
   subscribeAgenda, saveAgenda,
+  subscribeTimer, startTimer, pauseTimer, resetTimer,
 } from "@/lib/agenda";
 
 const AGENDA_PASSWORD = "graphe2026";
@@ -105,9 +106,13 @@ export default function AgendaPage() {
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const saveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Live progress tracking
-  const [running, setRunning] = useState(false);
-  const [elapsedSec, setElapsedSec] = useState(0);
+  // Shared timer state (synced via Firestore)
+  const [timerState, setTimerState] = useState<TimerState>({
+    running: false,
+    pausedAtSec: 0,
+    startedAt: null,
+  });
+  const [tick, setTick] = useState(0); // Forces re-render every second when running
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   // Subscribe to Firestore agenda
@@ -118,7 +123,6 @@ export default function AgendaPage() {
         setSections(doc.sections);
         setLoadedFromCloud(true);
       } else {
-        // No data in Firestore — seed with defaults
         setSections(DEFAULT_SECTIONS);
         saveAgenda(DEFAULT_SECTIONS).catch(() => {});
         setLoadedFromCloud(true);
@@ -127,12 +131,26 @@ export default function AgendaPage() {
     return unsub;
   }, [authenticated]);
 
-  // Live timer
+  // Subscribe to shared timer state
   useEffect(() => {
-    if (!running) return;
-    const id = setInterval(() => setElapsedSec((s) => s + 1), 1000);
+    if (!authenticated) return;
+    return subscribeTimer(setTimerState);
+  }, [authenticated]);
+
+  // Local interval to trigger re-renders while running (so elapsed/remaining update)
+  useEffect(() => {
+    if (!timerState.running) return;
+    const id = setInterval(() => setTick((t) => t + 1), 1000);
     return () => clearInterval(id);
-  }, [running]);
+  }, [timerState.running]);
+
+  // Compute current elapsed seconds from shared timer state
+  const elapsedSec = timerState.running && timerState.startedAt
+    ? timerState.pausedAtSec + (Date.now() - timerState.startedAt.toMillis()) / 1000
+    : timerState.pausedAtSec;
+  // Reference tick to keep linter happy and ensure re-renders are tied to it
+  void tick;
+  const running = timerState.running;
 
   function handleLogin(e: React.FormEvent) {
     e.preventDefault();
@@ -331,10 +349,16 @@ export default function AgendaPage() {
               {editMode ? "Salir edición" : "Editar"}
             </button>
 
-            {/* Play/Pause */}
+            {/* Play/Pause (shared across devices) */}
             {!editMode && (
               <button
-                onClick={() => setRunning(!running)}
+                onClick={() => {
+                  if (running) {
+                    pauseTimer(elapsedSec).catch(() => {});
+                  } else {
+                    startTimer(timerState.pausedAtSec).catch(() => {});
+                  }
+                }}
                 className="flex items-center gap-1.5 bg-[#FFA400] text-black font-semibold text-xs px-3 py-2 rounded-lg hover:bg-[#ffb520] transition-colors"
               >
                 {running ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5" />}
@@ -342,11 +366,11 @@ export default function AgendaPage() {
               </button>
             )}
 
-            {/* Reset timer (or reset agenda when editing) */}
+            {/* Reset timer (shared) or reset agenda when editing */}
             <button
               onClick={() => {
                 if (editMode) resetToDefault();
-                else { setRunning(false); setElapsedSec(0); }
+                else resetTimer().catch(() => {});
               }}
               className="flex items-center justify-center w-9 h-9 rounded-lg bg-white/[0.05] hover:bg-white/[0.1] border border-white/[0.08] transition-colors"
               title={editMode ? "Restaurar guión original" : "Reiniciar timer"}
@@ -406,19 +430,47 @@ export default function AgendaPage() {
           const isExpanded = editMode || expandedId === section.id;
           const endTime = formatTime(parseStart(section.start) + section.durationMin);
 
+          // Internal progress within the current block (0-1)
+          const blockStartMin = sections.slice(0, idx).reduce((acc, s) => acc + s.durationMin, 0);
+          const elapsedInBlockMin = elapsedSec / 60 - blockStartMin;
+          const blockProgress = isCurrent
+            ? Math.max(0, Math.min(1, elapsedInBlockMin / section.durationMin))
+            : 0;
+
+          // Remaining seconds in the current block (MM:SS)
+          const remainingSec = isCurrent
+            ? Math.max(0, Math.ceil(section.durationMin * 60 - elapsedInBlockMin * 60))
+            : 0;
+          const remainingMin = Math.floor(remainingSec / 60);
+          const remainingS = remainingSec % 60;
+          const remainingLabel = `${String(remainingMin).padStart(2, "0")}:${String(remainingS).padStart(2, "0")}`;
+
           return (
             <div
               key={section.id}
-              className="rounded-2xl border overflow-hidden transition-all"
+              className="rounded-2xl border overflow-hidden transition-all relative"
               style={{
-                backgroundColor: isCurrent ? `${section.color}15` : "#111110",
-                borderColor: isCurrent ? `${section.color}60` : isPast ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.08)",
+                backgroundColor: isCurrent ? "rgba(0, 201, 122, 0.05)" : "#111110",
+                borderColor: isCurrent ? "#00C97A" : isPast ? "rgba(255,255,255,0.04)" : "rgba(255,255,255,0.08)",
                 opacity: isPast ? 0.5 : 1,
+                boxShadow: isCurrent ? "0 0 24px rgba(0, 201, 122, 0.18)" : undefined,
               }}
             >
+              {/* Internal progress fill — grows from left as time passes within the block */}
+              {isCurrent && (
+                <div
+                  className="absolute inset-y-0 left-0 pointer-events-none"
+                  style={{
+                    width: `${blockProgress * 100}%`,
+                    backgroundColor: "rgba(0, 201, 122, 0.20)",
+                    transition: "width 1s linear",
+                    zIndex: 0,
+                  }}
+                />
+              )}
               {/* Header (clickable in view mode, always visible in edit mode) */}
               {editMode ? (
-                <div className="flex items-start gap-4 p-5">
+                <div className="flex items-start gap-4 p-5 relative z-10">
                   <div className="flex flex-col items-center gap-1 flex-shrink-0">
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -469,14 +521,17 @@ export default function AgendaPage() {
               ) : (
                 <button
                   onClick={() => setExpandedId(isExpanded ? null : section.id)}
-                  className="w-full flex items-start gap-4 p-5 text-left hover:bg-white/[0.02] transition-colors"
+                  className="w-full flex items-start gap-4 p-5 text-left hover:bg-white/[0.02] transition-colors relative z-10"
                 >
                   <div className="flex flex-col items-center gap-1 flex-shrink-0">
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center"
-                      style={{ backgroundColor: `${section.color}20`, border: `1px solid ${section.color}40` }}
+                      style={{
+                        backgroundColor: isCurrent ? "rgba(0, 201, 122, 0.25)" : `${section.color}20`,
+                        border: `1px solid ${isCurrent ? "#00C97A" : `${section.color}40`}`,
+                      }}
                     >
-                      <Icon className="w-4 h-4" style={{ color: section.color }} />
+                      <Icon className="w-4 h-4" style={{ color: isCurrent ? "#00C97A" : section.color }} />
                     </div>
                     <span className="text-[10px] text-white/30 tabular-nums">{String(idx + 1).padStart(2, "0")}</span>
                   </div>
@@ -484,9 +539,14 @@ export default function AgendaPage() {
                     <div className="flex items-baseline gap-2 mb-0.5 flex-wrap">
                       <h3 className="text-base font-bold text-white">{section.title}</h3>
                       {isCurrent && (
-                        <span className="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full" style={{ backgroundColor: section.color, color: "#000" }}>
-                          EN VIVO
-                        </span>
+                        <>
+                          <span className="text-[9px] font-bold tracking-wider px-2 py-0.5 rounded-full animate-pulse" style={{ backgroundColor: "#00C97A", color: "#000" }}>
+                            EN VIVO
+                          </span>
+                          <span className="text-base font-bold tabular-nums ml-auto" style={{ color: "#00C97A" }}>
+                            {remainingLabel}
+                          </span>
+                        </>
                       )}
                     </div>
                     {section.subtitle && <p className="text-xs text-white/50 mb-2">{section.subtitle}</p>}
@@ -506,7 +566,7 @@ export default function AgendaPage() {
 
               {/* Expanded body */}
               {isExpanded && (
-                <div className="border-t border-white/[0.06] p-5 space-y-5">
+                <div className="border-t border-white/[0.06] p-5 space-y-5 relative z-10">
                   {section.script.map((block, bIdx) => (
                     <div key={bIdx} className="space-y-2">
                       <div className="flex items-center justify-between">
