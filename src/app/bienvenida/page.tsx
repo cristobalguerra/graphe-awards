@@ -121,6 +121,18 @@ const STEPS: Step[] = [
     emoji: "🧘",
   },
 
+  // ── Bridge — declaración de marca antes del reveal ────────────────────
+  { kind: "pause", ms: 800 },
+  {
+    kind: "phrase",
+    text: "Y hoy, en Graphē Awards, reconocemos el proceso más allá de solo el resultado.",
+    typeMs: 60,
+    holdMs: 2800,
+    eraseMs: 30,
+    emphasis: true,
+    emoji: "🏆",
+  },
+
   // ── Reveal final: se escribe igual que todo, se queda ahí ─────────────
   { kind: "pause", ms: 1100 },
   { kind: "final", text: "Equivocarse también es diseñar.", typeMs: 75 },
