@@ -140,6 +140,167 @@ const STEPS: Step[] = [
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
+// ─── Procedural Web Audio sound design ───────────────────────────────────
+type AudioWindow = Window & {
+  webkitAudioContext?: typeof AudioContext;
+};
+
+let audioCtx: AudioContext | null = null;
+let lastClickAt = 0;
+
+function getCtx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  if (!audioCtx) {
+    const w = window as AudioWindow;
+    const Ctor = window.AudioContext || w.webkitAudioContext;
+    if (!Ctor) return null;
+    audioCtx = new Ctor();
+  }
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+function playClick() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  // Throttle: no clicks closer than 50ms
+  const now = ctx.currentTime;
+  if (now - lastClickAt < 0.05) return;
+  lastClickAt = now;
+
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.frequency.value = 1100 + Math.random() * 500;
+  osc.type = "square";
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.025, now + 0.003);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.035);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.04);
+}
+
+function playError() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  // Two oscillators that descend — classic UI error
+  [{ s: 440, e: 220 }, { s: 660, e: 330 }].forEach(({ s: start, e: end }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sawtooth";
+    osc.frequency.setValueAtTime(start, now);
+    osc.frequency.exponentialRampToValueAtTime(end, now + 0.28);
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(0.06, now + 0.015);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.4);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.45);
+  });
+}
+
+function playSuccess() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  // Bell-like ascending arpeggio: C5, E5, G5
+  [523.25, 659.25, 783.99].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    const t = now + i * 0.06;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.05, t + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.7);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.8);
+  });
+}
+
+function playThud() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "sine";
+  osc.frequency.setValueAtTime(160, now);
+  osc.frequency.exponentialRampToValueAtTime(40, now + 0.25);
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.22, now + 0.005);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.5);
+  osc.connect(gain).connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 0.55);
+}
+
+function playWhoosh() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  // Filtered white noise sweep — perfect for accelerations
+  const buffer = ctx.createBuffer(1, ctx.sampleRate * 0.6, ctx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for (let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  const filter = ctx.createBiquadFilter();
+  filter.type = "bandpass";
+  filter.frequency.setValueAtTime(400, now);
+  filter.frequency.exponentialRampToValueAtTime(2400, now + 0.5);
+  filter.Q.value = 5;
+  const gain = ctx.createGain();
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.08, now + 0.1);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.55);
+  src.connect(filter).connect(gain).connect(ctx.destination);
+  src.start(now);
+  src.stop(now + 0.6);
+}
+
+function playReveal() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  // Warm major chord with sparkle: C4, G4, C5, E5, G5
+  [261.63, 392, 523.25, 659.25, 783.99].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    const t = now + i * 0.05;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.06, t + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 3);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 3.1);
+  });
+}
+
+function playSparkle() {
+  const ctx = getCtx();
+  if (!ctx) return;
+  const now = ctx.currentTime;
+  // Quick high shimmer
+  [1046.5, 1318.5, 1568, 2093].forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = freq;
+    const t = now + i * 0.04;
+    gain.gain.setValueAtTime(0, t);
+    gain.gain.linearRampToValueAtTime(0.04, t + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + 0.35);
+  });
+}
+
 export default function BienvenidaPage() {
   const [text, setText] = useState("");
   const [showCursor] = useState(true);
@@ -151,15 +312,19 @@ export default function BienvenidaPage() {
   const [finalLine1, setFinalLine1] = useState("");
   const [finalLine2, setFinalLine2] = useState("");
   const [finalActive, setFinalActive] = useState<1 | 2>(1);
+  const [started, setStarted] = useState(false);
   const cancelled = useRef(false);
 
   useEffect(() => {
+    if (!started) return;
     cancelled.current = false;
 
     async function typeText(target: string, msPerChar: number) {
       for (let i = 1; i <= target.length; i++) {
         if (cancelled.current) return;
         setText(target.slice(0, i));
+        // Click sound on every other char (throttled internally too)
+        if (i % 2 === 0 || target.length < 8) playClick();
         await sleep(msPerChar);
       }
     }
@@ -182,6 +347,11 @@ export default function BienvenidaPage() {
         }
 
         if (step.kind === "phrase") {
+          // Special SFX triggers per phrase
+          if (step.text === "No.") playThud();
+          if (step.text === "Y otra." && (step.typeMs ?? 50) <= 12) playWhoosh();
+          if (step.emoji === "✨" || step.emoji === "🤩" || step.emoji === "🤯") playSparkle();
+
           setEmphasis(!!step.emphasis);
           setEmoji(step.emoji ?? "");
           await typeText(step.text, step.typeMs ?? 50);
@@ -195,7 +365,8 @@ export default function BienvenidaPage() {
         if (step.kind === "typo") {
           // 1. Type the wrong version
           await typeText(step.wrong, step.typeMs ?? 65);
-          // 2. Show typo state: red wavy underline + frustration emoji + note
+          // 2. ERROR SOUND + Show typo state
+          playError();
           setIsTypo(true);
           setEmoji(step.emojiWrong ?? "😖");
           setNote(step.noteText ?? "");
@@ -203,8 +374,10 @@ export default function BienvenidaPage() {
           // 3. Erase the wrong version
           await eraseText(step.wrong, step.eraseMs ?? 35);
           setIsTypo(false);
-          // 4. Type the correct version + happy emoji
+          // 4. Type the correct version
           await typeText(step.right, step.typeMs ?? 65);
+          // SUCCESS SOUND on correction
+          playSuccess();
           setEmoji(step.emojiRight ?? "😊");
           await sleep(step.holdRightMs ?? 800);
           // 5. Erase to prepare for next phrase
@@ -218,12 +391,15 @@ export default function BienvenidaPage() {
           setIsFinal(true);
           setEmoji("");
           setText("");
+          // REVEAL SOUND — warm chord
+          playReveal();
           const typeMs = step.typeMs ?? 90;
           // Type line 1
           setFinalActive(1);
           for (let i = 1; i <= step.line1.length; i++) {
             if (cancelled.current) return;
             setFinalLine1(step.line1.slice(0, i));
+            if (i % 2 === 0) playClick();
             await sleep(typeMs);
           }
           // Pause between lines
@@ -233,6 +409,7 @@ export default function BienvenidaPage() {
           for (let i = 1; i <= step.line2.length; i++) {
             if (cancelled.current) return;
             setFinalLine2(step.line2.slice(0, i));
+            if (i % 2 === 0) playClick();
             await sleep(typeMs);
           }
           return;
@@ -244,10 +421,45 @@ export default function BienvenidaPage() {
     return () => {
       cancelled.current = true;
     };
-  }, []);
+  }, [started]);
+
+  // ── Start overlay click handler — primes audio + kicks off animation ──
+  function handleStart() {
+    if (started) return;
+    // Prime the audio context with a silent click so subsequent sounds work
+    getCtx();
+    setStarted(true);
+  }
 
   return (
-    <div className="fixed inset-0 bg-black text-white overflow-hidden flex flex-col items-center justify-center select-none">
+    <div
+      className="fixed inset-0 bg-black text-white overflow-hidden flex flex-col items-center justify-center select-none"
+      onClick={handleStart}
+    >
+      {/* ── Start overlay — required for audio in browsers ─────────────── */}
+      {!started && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black z-50 cursor-pointer animate-graphe-fade-in">
+          <p
+            className="text-xs tracking-[0.4em] font-bold text-white/40 uppercase mb-4"
+            style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+          >
+            &quot;BIENVENIDA&quot;
+          </p>
+          <p
+            className="text-sm tracking-[0.2em] font-bold text-white uppercase"
+            style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+          >
+            ▶ &nbsp;Tap para comenzar
+          </p>
+          <p
+            className="text-[10px] tracking-[0.3em] font-medium text-white/30 uppercase mt-3"
+            style={{ fontFamily: "'Helvetica Neue', Helvetica, Arial, sans-serif" }}
+          >
+            🔊 con sonido
+          </p>
+        </div>
+      )}
+
       {/* Top-left "BIENVENIDA" tag */}
       <div className="absolute top-6 left-6 text-[10px] tracking-[0.3em] font-bold text-white/30 uppercase">
         &quot;BIENVENIDA&quot;
