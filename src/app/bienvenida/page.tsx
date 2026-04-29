@@ -28,7 +28,7 @@ type Step =
       emojiWrong?: string;
       emojiRight?: string;
     }
-  | { kind: "final"; text: string; typeMs?: number };
+  | { kind: "final"; line1: string; line2: string; typeMs?: number };
 
 const STEPS: Step[] = [
   // ── Apertura: lento, pesado, dudando ──────────────────────────────────
@@ -133,9 +133,9 @@ const STEPS: Step[] = [
     emoji: "🏆",
   },
 
-  // ── Reveal final: se escribe igual que todo, se queda ahí ─────────────
+  // ── Reveal final: dos líneas, "Equivocarse" normal y "es diseñar" light ─
   { kind: "pause", ms: 1100 },
-  { kind: "final", text: "Equivocarse también es diseñar.", typeMs: 75 },
+  { kind: "final", line1: "Equivocarse", line2: "es diseñar.", typeMs: 90 },
 ];
 
 const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
@@ -148,6 +148,9 @@ export default function BienvenidaPage() {
   const [note, setNote] = useState("");
   const [emoji, setEmoji] = useState("");
   const [isFinal, setIsFinal] = useState(false);
+  const [finalLine1, setFinalLine1] = useState("");
+  const [finalLine2, setFinalLine2] = useState("");
+  const [finalActive, setFinalActive] = useState<1 | 2>(1);
   const cancelled = useRef(false);
 
   useEffect(() => {
@@ -214,8 +217,24 @@ export default function BienvenidaPage() {
         if (step.kind === "final") {
           setIsFinal(true);
           setEmoji("");
-          await typeText(step.text, step.typeMs ?? 75);
-          // Stays on screen permanently. Cursor keeps blinking.
+          setText("");
+          const typeMs = step.typeMs ?? 90;
+          // Type line 1
+          setFinalActive(1);
+          for (let i = 1; i <= step.line1.length; i++) {
+            if (cancelled.current) return;
+            setFinalLine1(step.line1.slice(0, i));
+            await sleep(typeMs);
+          }
+          // Pause between lines
+          await sleep(450);
+          // Type line 2
+          setFinalActive(2);
+          for (let i = 1; i <= step.line2.length; i++) {
+            if (cancelled.current) return;
+            setFinalLine2(step.line2.slice(0, i));
+            await sleep(typeMs);
+          }
           return;
         }
       }
@@ -239,57 +258,108 @@ export default function BienvenidaPage() {
         N°02 / 2026
       </div>
 
-      {/* Phrase being typed */}
+      {/* Phrase being typed (or final reveal) */}
       <div className="px-8 text-center flex flex-col items-center">
-        <span
-          className={`inline-block font-bold tracking-tight transition-all duration-300 ${
-            emphasis ? "scale-105" : "scale-100"
-          } ${isTypo ? "graphe-typo" : ""} ${
-            isFinal ? "text-4xl sm:text-6xl md:text-7xl" : "text-3xl sm:text-5xl md:text-6xl"
-          }`}
-          style={{
-            fontFamily:
-              "'Helvetica Neue', Helvetica, Arial, sans-serif",
-            minHeight: "1.2em",
-          }}
-        >
-          {text}
-          {showCursor && (
+        {!isFinal ? (
+          <>
             <span
-              className="inline-block ml-1 align-middle"
+              className={`inline-block font-bold tracking-tight transition-all duration-300 ${
+                emphasis ? "scale-105" : "scale-100"
+              } ${isTypo ? "graphe-typo" : ""} text-3xl sm:text-5xl md:text-6xl`}
               style={{
-                width: "0.06em",
-                height: "0.85em",
-                background: "#ffffff",
-                verticalAlign: "baseline",
-                animation: "graphe-blink 0.8s steps(1) infinite",
+                fontFamily:
+                  "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                minHeight: "1.2em",
               }}
-            />
-          )}
-        </span>
+            >
+              {text}
+              {showCursor && (
+                <span
+                  className="inline-block ml-1 align-middle"
+                  style={{
+                    width: "0.06em",
+                    height: "0.85em",
+                    background: "#ffffff",
+                    verticalAlign: "baseline",
+                    animation: "graphe-blink 0.8s steps(1) infinite",
+                  }}
+                />
+              )}
+            </span>
 
-        {/* Emoji reaction below the phrase */}
-        {emoji && (
-          <span
-            key={emoji}
-            className="mt-5 text-3xl sm:text-4xl md:text-5xl animate-graphe-emoji-pop"
-            aria-hidden="true"
-          >
-            {emoji}
-          </span>
-        )}
+            {/* Emoji reaction below the phrase */}
+            {emoji && (
+              <span
+                key={emoji}
+                className="mt-5 text-3xl sm:text-4xl md:text-5xl animate-graphe-emoji-pop"
+                aria-hidden="true"
+              >
+                {emoji}
+              </span>
+            )}
 
-        {/* Typo annotation: "siempre pasa." style */}
-        {note && (
-          <span
-            className="mt-3 text-xs sm:text-sm italic text-white/40 animate-graphe-fade-in"
-            style={{
-              fontFamily:
-                "'Helvetica Neue', Helvetica, Arial, sans-serif",
-            }}
-          >
-            {note}
-          </span>
+            {/* Typo annotation: "siempre pasa." style */}
+            {note && (
+              <span
+                className="mt-3 text-xs sm:text-sm italic text-white/40 animate-graphe-fade-in"
+                style={{
+                  fontFamily:
+                    "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                }}
+              >
+                {note}
+              </span>
+            )}
+          </>
+        ) : (
+          // ── Final reveal: 2 líneas, line1 normal, line2 light ──────────
+          <div className="flex flex-col items-center leading-[1.05]">
+            <span
+              className="text-5xl sm:text-7xl md:text-8xl font-normal tracking-tight"
+              style={{
+                fontFamily:
+                  "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                minHeight: "1.05em",
+              }}
+            >
+              {finalLine1}
+              {showCursor && finalActive === 1 && (
+                <span
+                  className="inline-block ml-1 align-middle"
+                  style={{
+                    width: "0.06em",
+                    height: "0.85em",
+                    background: "#ffffff",
+                    verticalAlign: "baseline",
+                    animation: "graphe-blink 0.8s steps(1) infinite",
+                  }}
+                />
+              )}
+            </span>
+            <span
+              className="text-5xl sm:text-7xl md:text-8xl tracking-tight"
+              style={{
+                fontFamily:
+                  "'Helvetica Neue', Helvetica, Arial, sans-serif",
+                fontWeight: 200,
+                minHeight: "1.05em",
+              }}
+            >
+              {finalLine2}
+              {showCursor && finalActive === 2 && (
+                <span
+                  className="inline-block ml-1 align-middle"
+                  style={{
+                    width: "0.06em",
+                    height: "0.85em",
+                    background: "#ffffff",
+                    verticalAlign: "baseline",
+                    animation: "graphe-blink 0.8s steps(1) infinite",
+                  }}
+                />
+              )}
+            </span>
+          </div>
         )}
       </div>
 
