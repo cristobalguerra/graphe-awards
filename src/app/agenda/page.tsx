@@ -305,8 +305,9 @@ export default function AgendaPage() {
   const progressPct = Math.min(100, (elapsedSec / totalSec) * 100);
 
   function formatElapsed(sec: number): string {
-    const m = Math.floor(sec / 60);
-    const s = sec % 60;
+    const total = Math.floor(sec);
+    const m = Math.floor(total / 60);
+    const s = total % 60;
     return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   }
 
